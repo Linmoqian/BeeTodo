@@ -1,115 +1,66 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import type { Todo } from "../types";
+import { useState, useCallback, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import type { StoredTodo } from "../types";
 
 export function useTodos() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos, setTodos] = useState<StoredTodo[]>([]);
   const [now, setNow] = useState(Date.now());
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const activeTimerIdRef = useRef<string | null>(null);
 
-  // Tick every second to update active timer display
   useEffect(() => {
-    intervalRef.current = setInterval(() => setNow(Date.now()), 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    invoke<StoredTodo[]>("list_todos")
+      .then((nextTodos) => {
+        if (mounted) {
+          setTodos(nextTodos);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load todos", error);
+      });
+
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      mounted = false;
     };
   }, []);
 
-  const addTodo = useCallback((text: string) => {
-    setTodos((prev) => [
-      {
-        id: crypto.randomUUID(),
-        text,
-        completed: false,
-        createdAt: Date.now(),
-        elapsedMs: 0,
-        timerStartedAt: null,
-        liveMs: 0,
-      },
-      ...prev,
-    ]);
+  const addTodo = useCallback(async (text: string) => {
+    const nextTodos = await invoke<StoredTodo[]>("add_todo", { text });
+    setTodos(nextTodos);
   }, []);
 
-  const removeTodo = useCallback((id: string) => {
-    setTodos((prev) => {
-      const todo = prev.find((t) => t.id === id);
-      if (todo?.timerStartedAt) activeTimerIdRef.current = null;
-      return prev.filter((t) => t.id !== id);
+  const removeTodo = useCallback(async (id: string) => {
+    const nextTodos = await invoke<StoredTodo[]>("remove_todo", { id });
+    setTodos(nextTodos);
+  }, []);
+
+  const toggleTodo = useCallback(async (id: string) => {
+    const nextTodos = await invoke<StoredTodo[]>("toggle_todo", { id });
+    setTodos(nextTodos);
+  }, []);
+
+  const startTimer = useCallback(async (id: string) => {
+    const nextTodos = await invoke<StoredTodo[]>("start_timer", { id });
+    setTodos(nextTodos);
+  }, []);
+
+  const pauseTimer = useCallback(async (id: string) => {
+    const nextTodos = await invoke<StoredTodo[]>("pause_timer", { id });
+    setTodos(nextTodos);
+  }, []);
+
+  const reorderTodos = useCallback(async (activeId: string, overId: string) => {
+    const nextTodos = await invoke<StoredTodo[]>("reorder_todos", {
+      activeId,
+      overId,
     });
+    setTodos(nextTodos);
   }, []);
 
-  const toggleTodo = useCallback((id: string) => {
-    setTodos((prev) =>
-      prev.map((t) => {
-        if (t.id !== id) return t;
-        const completing = !t.completed;
-        // Stop timer when completing a task
-        if (completing && t.timerStartedAt) {
-          activeTimerIdRef.current = null;
-          return {
-            ...t,
-            completed: true,
-            elapsedMs: t.elapsedMs + (Date.now() - t.timerStartedAt),
-            timerStartedAt: null,
-          };
-        }
-        return { ...t, completed: completing };
-      })
-    );
-  }, []);
-
-  const startTimer = useCallback((id: string) => {
-    setTodos((prev) =>
-      prev.map((t) => {
-        // Pause any currently running timer
-        if (t.timerStartedAt) {
-          activeTimerIdRef.current = null;
-          return {
-            ...t,
-            elapsedMs: t.elapsedMs + (Date.now() - t.timerStartedAt),
-            timerStartedAt: null,
-          };
-        }
-        // Start the target timer
-        if (t.id === id) {
-          activeTimerIdRef.current = id;
-          return { ...t, timerStartedAt: Date.now() };
-        }
-        return t;
-      })
-    );
-  }, []);
-
-  const pauseTimer = useCallback((id: string) => {
-    setTodos((prev) =>
-      prev.map((t) => {
-        if (t.id !== id || !t.timerStartedAt) return t;
-        activeTimerIdRef.current = null;
-        return {
-          ...t,
-          elapsedMs: t.elapsedMs + (Date.now() - t.timerStartedAt),
-          timerStartedAt: null,
-        };
-      })
-    );
-  }, []);
-
-  const reorderTodos = useCallback(
-    (activeId: string, overId: string) => {
-      setTodos((prev) => {
-        const oldIndex = prev.findIndex((t) => t.id === activeId);
-        const newIndex = prev.findIndex((t) => t.id === overId);
-        if (oldIndex === -1 || newIndex === -1) return prev;
-        const next = [...prev];
-        const [moved] = next.splice(oldIndex, 1);
-        next.splice(newIndex, 0, moved);
-        return next;
-      });
-    },
-    []
-  );
-
-  // Compute live elapsed time for each todo
   const todosWithLiveTime = todos.map((t) => {
     const liveMs = t.timerStartedAt
       ? t.elapsedMs + (now - t.timerStartedAt)
@@ -117,10 +68,10 @@ export function useTodos() {
     return { ...t, liveMs };
   });
 
-  // Total tracked time across all todos
   const totalMs = todosWithLiveTime.reduce((sum, t) => sum + t.liveMs, 0);
 
-  const activeTimerId = activeTimerIdRef.current;
+  const activeTimerId =
+    todos.find((todo) => todo.timerStartedAt !== null)?.id ?? null;
 
   return {
     todos: todosWithLiveTime,
