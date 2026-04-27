@@ -37,7 +37,7 @@ export function ThemeSettings() {
       {open && (
         <div
           ref={panelRef}
-          className="settings-panel absolute left-0 top-full mt-2 w-52 rounded-xl border border-[var(--settings-border)] bg-[var(--settings-bg)] p-3 shadow-xl backdrop-blur-xl"
+          className="settings-panel fixed left-4 top-14 z-50 w-52 rounded-xl border border-[var(--settings-border)] bg-[var(--settings-bg)] p-3 shadow-xl backdrop-blur-xl"
         >
           <p className="mb-2.5 text-[11px] font-medium uppercase tracking-widest text-[var(--settings-label)]">
             主题
