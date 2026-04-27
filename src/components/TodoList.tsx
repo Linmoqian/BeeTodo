@@ -17,11 +17,11 @@ import type { Todo } from "../types";
 interface TodoListProps {
   todos: Todo[];
   activeTimerId: string | null;
-  onToggle: (id: string) => void;
-  onRemove: (id: string) => void;
-  onReorder: (activeId: string, overId: string) => void;
-  onStartTimer: (id: string) => void;
-  onPauseTimer: (id: string) => void;
+  onToggle: (id: string) => void | Promise<void>;
+  onRemove: (id: string) => void | Promise<void>;
+  onReorder: (activeId: string, overId: string) => void | Promise<void>;
+  onStartTimer: (id: string) => void | Promise<void>;
+  onPauseTimer: (id: string) => void | Promise<void>;
 }
 
 export function TodoList({
@@ -42,7 +42,7 @@ export function TodoList({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    onReorder(String(active.id), String(over.id));
+    void onReorder(String(active.id), String(over.id));
   };
 
   return (

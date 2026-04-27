@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface TodoInputProps {
-  onAdd: (text: string) => void;
+  onAdd: (text: string) => void | Promise<void>;
 }
 
 export function TodoInput({ onAdd }: TodoInputProps) {
@@ -14,25 +14,28 @@ export function TodoInput({ onAdd }: TodoInputProps) {
     e.preventDefault();
     const trimmed = text.trim();
     if (!trimmed) return;
-    onAdd(trimmed);
+    void onAdd(trimmed);
     setText("");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="relative flex items-center overflow-hidden rounded-2xl border border-border/40 bg-card p-1 shadow-sm transition-shadow focus-within:border-primary/50 focus-within:shadow-md"
+    >
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="添加新任务..."
-        className="flex-1 border-border bg-input text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/40"
+        className="flex-1 border-0 bg-transparent px-4 text-base shadow-none outline-none focus-visible:ring-0"
       />
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         type="submit"
-        className="flex h-8 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        className="mr-1 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
       >
-        <Plus size={16} strokeWidth={2.5} />
+        <Plus size={20} strokeWidth={2.5} />
       </motion.button>
     </form>
   );

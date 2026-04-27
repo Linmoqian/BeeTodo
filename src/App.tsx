@@ -30,10 +30,10 @@ function App() {
   const completedCount = todos.filter((t) => t.completed).length;
 
   return (
-    <div className="noise-bg relative min-h-screen bg-background">
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-4 py-10">
+    <div className="noise-bg relative min-h-screen bg-background text-foreground selection:bg-primary/30">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-xl flex-col px-6 py-12">
         {/* Header */}
-        <header className="mb-6 flex items-center justify-between px-1">
+        <header className="mb-8 flex items-center justify-between px-2">
           <div className="flex items-center gap-2.5">
             <ThemeSettings />
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -56,13 +56,13 @@ function App() {
         </header>
 
         {/* Separator */}
-        <div className="mb-5 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
 
         {/* Input */}
         <TodoInput onAdd={addTodo} />
 
         {/* Todo list */}
-        <div className="mt-4 flex flex-col gap-1.5">
+        <div className="mt-8 flex flex-col gap-3">
           <TodoList
             todos={todos}
             activeTimerId={activeTimerId}
