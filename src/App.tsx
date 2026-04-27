@@ -1,50 +1,39 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { useTodos } from "./hooks/useTodos";
+import { TodoInput } from "./components/TodoInput";
+import { TodoList } from "./components/TodoList";
+import "./index.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const { todos, addTodo, removeTodo, toggleTodo, reorderTodos } = useTodos();
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-pink-100 via-purple-50 to-purple-100">
+      <div className="blob blob-1" />
+      <div className="blob blob-2" />
+      <div className="blob blob-3" />
 
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-lg flex-col px-4 py-12">
+        <div className="rounded-2xl bg-white/70 p-6 shadow-xl backdrop-blur-xl">
+          <h1 className="mb-6 text-center text-2xl font-bold text-purple-600">
+            My Todo
+          </h1>
+          <TodoInput onAdd={addTodo} />
+          <div className="mt-4 flex flex-col gap-2">
+            <TodoList
+              todos={todos}
+              onToggle={toggleTodo}
+              onRemove={removeTodo}
+              onReorder={reorderTodos}
+            />
+          </div>
+          {todos.length === 0 && (
+            <p className="mt-6 text-center text-sm text-gray-400">
+              还没有任务，添加一个吧 ✨
+            </p>
+          )}
+        </div>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    </div>
   );
 }
 
