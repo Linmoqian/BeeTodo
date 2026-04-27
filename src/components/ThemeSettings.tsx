@@ -1,12 +1,26 @@
 import { useState, useRef, useEffect } from "react";
 import { Settings } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 import { THEMES, useTheme } from "../hooks/useTheme";
+
+interface AppSettings {
+  alwaysOnTop: boolean;
+}
 
 export function ThemeSettings() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
+  const [alwaysOnTop, setAlwaysOnTop] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    invoke<AppSettings>("get_settings")
+      .then((settings) => setAlwaysOnTop(settings.alwaysOnTop))
+      .catch((error) => {
+        console.error("Failed to load settings", error);
+      });
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -23,6 +37,18 @@ export function ThemeSettings() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
+  const toggleAlwaysOnTop = async () => {
+    const enabled = !alwaysOnTop;
+    setAlwaysOnTop(enabled);
+    try {
+      const settings = await invoke<AppSettings>("set_always_on_top", { enabled });
+      setAlwaysOnTop(settings.alwaysOnTop);
+    } catch (error) {
+      setAlwaysOnTop(!enabled);
+      console.error("Failed to set always on top", error);
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -37,7 +63,7 @@ export function ThemeSettings() {
       {open && (
         <div
           ref={panelRef}
-          className="settings-panel fixed left-1/2 top-1/2 z-50 w-52 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--settings-border)] bg-[var(--settings-bg)] p-3 shadow-xl backdrop-blur-xl"
+          className="settings-panel fixed left-1/2 top-1/2 z-50 w-60 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--settings-border)] bg-[var(--settings-bg)] p-3 shadow-xl backdrop-blur-xl"
         >
           <p className="mb-2.5 text-[11px] font-medium uppercase tracking-widest text-[var(--settings-label)]">
             主题
@@ -67,6 +93,27 @@ export function ThemeSettings() {
               </button>
             ))}
           </div>
+
+          <div className="my-3 h-px bg-[var(--settings-border)]/80" />
+
+          <p className="mb-2.5 text-[11px] font-medium uppercase tracking-widest text-[var(--settings-label)]">
+            窗口
+          </p>
+          <button
+            onClick={() => void toggleAlwaysOnTop()}
+            className="flex w-full items-center rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-[var(--settings-item-hover)]"
+          >
+            <span className="text-[var(--settings-text)]">始终置顶</span>
+            <span
+              className={`ml-auto rounded-full px-2 py-0.5 text-xs ${
+                alwaysOnTop
+                  ? "bg-primary/20 text-[var(--settings-check)]"
+                  : "bg-secondary text-muted-foreground"
+              }`}
+            >
+              {alwaysOnTop ? "开启" : "关闭"}
+            </span>
+          </button>
         </div>
       )}
     </div>
