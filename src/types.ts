@@ -3,4 +3,7 @@ export interface Todo {
   text: string;
   completed: boolean;
   createdAt: number;
+  elapsedMs: number;
+  timerStartedAt: number | null;
+  liveMs: number;
 }

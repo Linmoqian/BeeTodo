@@ -16,16 +16,22 @@ import type { Todo } from "../types";
 
 interface TodoListProps {
   todos: Todo[];
+  activeTimerId: string | null;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
   onReorder: (activeId: string, overId: string) => void;
+  onStartTimer: (id: string) => void;
+  onPauseTimer: (id: string) => void;
 }
 
 export function TodoList({
   todos,
+  activeTimerId,
   onToggle,
   onRemove,
   onReorder,
+  onStartTimer,
+  onPauseTimer,
 }: TodoListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -54,8 +60,11 @@ export function TodoList({
             <TodoItem
               key={todo.id}
               todo={todo}
+              isActive={activeTimerId === todo.id}
               onToggle={onToggle}
               onRemove={onRemove}
+              onStartTimer={onStartTimer}
+              onPauseTimer={onPauseTimer}
             />
           ))}
         </AnimatePresence>
