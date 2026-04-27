@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { StoredTodo } from "../types";
+import type { StoredTodo, TodoColor } from "../types";
 
 export function useTodos() {
   const [todos, setTodos] = useState<StoredTodo[]>([]);
@@ -61,6 +61,16 @@ export function useTodos() {
     setTodos(nextTodos);
   }, []);
 
+  const setTodoColor = useCallback(async (id: string, color: TodoColor) => {
+    const nextTodos = await invoke<StoredTodo[]>("set_todo_color", { id, color });
+    setTodos(nextTodos);
+  }, []);
+
+  const pinTodoTop = useCallback(async (id: string) => {
+    const nextTodos = await invoke<StoredTodo[]>("pin_todo_top", { id });
+    setTodos(nextTodos);
+  }, []);
+
   const todosWithLiveTime = todos.map((t) => {
     const liveMs = t.timerStartedAt
       ? t.elapsedMs + (now - t.timerStartedAt)
@@ -83,5 +93,7 @@ export function useTodos() {
     startTimer,
     pauseTimer,
     reorderTodos,
+    setTodoColor,
+    pinTodoTop,
   };
 }

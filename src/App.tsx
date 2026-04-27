@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useTodos } from "./hooks/useTodos";
 import { TodoInput } from "./components/TodoInput";
 import { TodoList } from "./components/TodoList";
@@ -14,6 +15,15 @@ function formatTotalTime(ms: number): string {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
+function useCurrentTime() {
+  const [time, setTime] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return time;
+}
+
 function App() {
   const {
     todos,
@@ -25,7 +35,12 @@ function App() {
     startTimer,
     pauseTimer,
     reorderTodos,
+    setTodoColor,
+    pinTodoTop,
   } = useTodos();
+
+  const currentTime = useCurrentTime();
+  const timeString = currentTime.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
 
   const completedCount = todos.filter((t) => t.completed).length;
 
@@ -40,16 +55,22 @@ function App() {
               <Timer size={16} className="text-primary" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                Chronos
+              <h1 className="text-lg flex items-center gap-2 font-semibold tracking-tight text-foreground">
+                龚博后专用
               </h1>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                BeeTODO
+              </p>
             </div>
           </div>
           <div className="text-right">
-            <div className="font-mono text-lg tabular-nums tracking-widest text-primary">
+            <div className="font-mono text-xs tabular-nums tracking-widest text-muted-foreground opacity-80 mb-0.5">
+              {timeString}
+            </div>
+            <div className="font-mono text-lg leading-none tabular-nums tracking-widest text-primary">
               {formatTotalTime(totalMs)}
             </div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
               {completedCount}/{todos.length} 已完成
             </div>
           </div>
@@ -71,6 +92,8 @@ function App() {
             onReorder={reorderTodos}
             onStartTimer={startTimer}
             onPauseTimer={pauseTimer}
+            onSetColor={setTodoColor}
+            onPinTop={pinTodoTop}
           />
         </div>
 

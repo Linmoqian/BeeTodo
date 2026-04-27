@@ -12,7 +12,7 @@ import {
 } from "@dnd-kit/sortable";
 import { AnimatePresence } from "motion/react";
 import { TodoItem } from "./TodoItem";
-import type { Todo } from "../types";
+import type { Todo, TodoColor } from "../types";
 
 interface TodoListProps {
   todos: Todo[];
@@ -22,6 +22,8 @@ interface TodoListProps {
   onReorder: (activeId: string, overId: string) => void | Promise<void>;
   onStartTimer: (id: string) => void | Promise<void>;
   onPauseTimer: (id: string) => void | Promise<void>;
+  onSetColor: (id: string, color: TodoColor) => void | Promise<void>;
+  onPinTop: (id: string) => void | Promise<void>;
 }
 
 export function TodoList({
@@ -32,6 +34,8 @@ export function TodoList({
   onReorder,
   onStartTimer,
   onPauseTimer,
+  onSetColor,
+  onPinTop,
 }: TodoListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -65,6 +69,8 @@ export function TodoList({
               onRemove={onRemove}
               onStartTimer={onStartTimer}
               onPauseTimer={onPauseTimer}
+              onSetColor={onSetColor}
+              onPinTop={onPinTop}
             />
           ))}
         </AnimatePresence>
