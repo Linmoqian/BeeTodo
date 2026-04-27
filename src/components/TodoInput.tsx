@@ -21,12 +21,15 @@ export function TodoInput({ onAdd }: TodoInputProps) {
   return (
     <form
       onSubmit={handleSubmit}
+      autoComplete="off"
       className="relative flex items-center overflow-hidden rounded-2xl border border-border/40 bg-card p-1 shadow-sm transition-shadow focus-within:border-primary/50 focus-within:shadow-md"
     >
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="添加新任务..."
+        autoComplete="off"
+        spellCheck={false}
         className="flex-1 border-0 bg-transparent px-4 text-base shadow-none outline-none focus-visible:ring-0"
       />
       <motion.button
