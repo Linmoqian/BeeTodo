@@ -197,6 +197,13 @@
     }
   html {
     @apply font-sans bg-background;
+    scrollbar-width: none;
+    }
+  body {
+    scrollbar-width: none;
+    }
+  *::-webkit-scrollbar {
+    display: none;
     }
 }
 
