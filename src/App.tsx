@@ -63,7 +63,8 @@ function App() {
         await currentWindow.setResizable(false);
         await currentWindow.setMaximizable(false);
         await currentWindow.setSize(new LogicalSize(360, 110));
-        document.documentElement.style.background = "transparent";
+        document.documentElement.style.setProperty("background", "transparent", "important");
+        document.body.style.setProperty("background", "transparent", "important");
         return;
       }
 
@@ -72,9 +73,9 @@ function App() {
       await currentWindow.setResizable(true);
       await currentWindow.setMaximizable(true);
       await currentWindow.setDecorations(true);
-      await currentWindow.setDecorations(true);
       await currentWindow.setSize(normalSize ?? new LogicalSize(800, 600));
-      document.documentElement.style.background = "";
+      document.documentElement.style.removeProperty("background");
+      document.body.style.removeProperty("background");
     } catch (error) {
       console.error("Failed to update compact window mode", error);
     }
@@ -83,7 +84,7 @@ function App() {
   if (compactMode) {
     return (
       <div
-        className="compact-window flex min-h-screen flex-col items-center bg-background/70 text-foreground selection:bg-primary/30 backdrop-blur-xl"
+        className="compact-window flex min-h-screen flex-col items-center bg-background/60 text-foreground selection:bg-primary/30"
         data-tauri-drag-region
       >
         <div className="relative mt-2 flex w-full items-center justify-center">
