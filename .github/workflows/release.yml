@@ -1,19 +1,23 @@
-name: Build
+name: Release
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags:
+      - 'v*'
 
 jobs:
-  build:
+  release:
+    permissions:
+      contents: write
+
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: macos-latest
             args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
           - platform: windows-latest
             args: ""
           - platform: ubuntu-22.04
@@ -27,7 +31,7 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (Ubuntu)
         if: matrix.platform == 'ubuntu-22.04'
@@ -43,5 +47,12 @@ jobs:
       - run: npm ci
 
       - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tagName: v__VERSION__
+          releaseName: 'BeeTODO v__VERSION__'
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false
           args: ${{ matrix.args }}
