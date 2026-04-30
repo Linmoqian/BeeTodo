@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { LogicalSize, type PhysicalSize } from "@tauri-apps/api/dpi";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import { useTodos } from "./hooks/useTodos";
 import { TodoInput } from "./components/TodoInput";
 import { TodoList } from "./components/TodoList";
@@ -29,6 +30,13 @@ function useCurrentTime() {
 function App() {
   const normalWindowSizeRef = useRef<PhysicalSize | null>(null);
   const [compactMode, setCompactMode] = useState(false);
+  const [compactOpacity, setCompactOpacity] = useState(60);
+
+  useEffect(() => {
+    invoke<{ compactOpacity: number }>("get_settings")
+      .then((s) => setCompactOpacity(s.compactOpacity))
+      .catch(console.error);
+  }, []);
   const {
     todos,
     totalMs,
@@ -84,7 +92,8 @@ function App() {
   if (compactMode) {
     return (
       <div
-        className="compact-window flex min-h-screen flex-col items-center bg-background/60 text-foreground selection:bg-primary/30"
+        className="compact-window flex min-h-screen flex-col items-center text-foreground selection:bg-primary/30"
+        style={{ background: `color-mix(in oklch, var(--background) ${compactOpacity}%, transparent)` }}
         data-tauri-drag-region
       >
         <div className="relative mt-2 flex w-full items-center justify-center">

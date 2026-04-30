@@ -5,18 +5,23 @@ import { THEMES, useTheme } from "../hooks/useTheme";
 
 interface AppSettings {
   alwaysOnTop: boolean;
+  compactOpacity: number;
 }
 
 export function ThemeSettings() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [alwaysOnTop, setAlwaysOnTop] = useState(false);
+  const [compactOpacity, setCompactOpacity] = useState(60);
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     invoke<AppSettings>("get_settings")
-      .then((settings) => setAlwaysOnTop(settings.alwaysOnTop))
+      .then((settings) => {
+        setAlwaysOnTop(settings.alwaysOnTop);
+        setCompactOpacity(settings.compactOpacity);
+      })
       .catch((error) => {
         console.error("Failed to load settings", error);
       });
@@ -114,6 +119,29 @@ export function ThemeSettings() {
               {alwaysOnTop ? "开启" : "关闭"}
             </span>
           </button>
+
+          <div className="mt-1.5 flex flex-col gap-1.5 px-2.5 py-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--settings-text)] text-sm">小窗透明度</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{compactOpacity}%</span>
+            </div>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              value={compactOpacity}
+              onChange={async (e) => {
+                const v = Number(e.target.value);
+                setCompactOpacity(v);
+                try {
+                  await invoke<AppSettings>("set_compact_opacity", { opacity: v });
+                } catch (error) {
+                  console.error("Failed to set compact opacity", error);
+                }
+              }}
+              className="h-1 w-full cursor-pointer appearance-none rounded-full bg-secondary accent-primary"
+            />
+          </div>
         </div>
       )}
     </div>
