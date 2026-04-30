@@ -30,6 +30,8 @@ function useCurrentTime() {
 function App() {
   const normalWindowSizeRef = useRef<PhysicalSize | null>(null);
   const [compactMode, setCompactMode] = useState(false);
+  const [compactEntering, setCompactEntering] = useState(false);
+  const [normalEntering, setNormalEntering] = useState(false);
   const [compactOpacity, setCompactOpacity] = useState(60);
 
   useEffect(() => {
@@ -60,11 +62,11 @@ function App() {
   if (activeTodo) lastActiveTodoRef.current = activeTodo;
   const compactTodo = activeTodo ?? lastActiveTodoRef.current;
   const setCompactWindowMode = async (enabled: boolean) => {
-    setCompactMode(enabled);
-
     try {
       const currentWindow = getCurrentWindow();
       if (enabled) {
+        setNormalEntering(true);
+        await new Promise((r) => setTimeout(r, 200));
         normalWindowSizeRef.current = await currentWindow.innerSize();
         await currentWindow.setAlwaysOnTop(true);
         await currentWindow.setDecorations(false);
@@ -73,9 +75,14 @@ function App() {
         await currentWindow.setSize(new LogicalSize(360, 110));
         document.documentElement.style.setProperty("background", "transparent", "important");
         document.body.style.setProperty("background", "transparent", "important");
+        setCompactMode(true);
+        setNormalEntering(false);
+        requestAnimationFrame(() => setCompactEntering(true));
         return;
       }
 
+      setCompactEntering(false);
+      await new Promise((r) => setTimeout(r, 200));
       const normalSize = normalWindowSizeRef.current;
       await currentWindow.setAlwaysOnTop(false);
       await currentWindow.setResizable(true);
@@ -84,6 +91,8 @@ function App() {
       await currentWindow.setSize(normalSize ?? new LogicalSize(800, 600));
       document.documentElement.style.removeProperty("background");
       document.body.style.removeProperty("background");
+      setCompactMode(false);
+      requestAnimationFrame(() => setNormalEntering(true));
     } catch (error) {
       console.error("Failed to update compact window mode", error);
     }
@@ -92,7 +101,7 @@ function App() {
   if (compactMode) {
     return (
       <div
-        className="compact-window flex min-h-screen flex-col items-center text-foreground selection:bg-primary/30"
+        className={`compact-window flex min-h-screen flex-col items-center text-foreground selection:bg-primary/30 transition-all duration-300 ease-out ${compactEntering ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
         style={{ background: `color-mix(in oklch, var(--background) ${compactOpacity}%, transparent)` }}
         data-tauri-drag-region
       >
@@ -134,7 +143,7 @@ function App() {
   }
 
   return (
-    <div className="noise-bg relative min-h-screen bg-background text-foreground selection:bg-primary/30">
+    <div className={`noise-bg relative min-h-screen bg-background text-foreground selection:bg-primary/30 transition-all duration-300 ease-out ${normalEntering ? "opacity-100 scale-100" : "opacity-0 scale-[1.02]"}`}>
       <div className="relative z-10 mx-auto flex min-h-screen max-w-xl flex-col px-6 py-12">
         {/* Header */}
         <header className="mb-8 flex items-center justify-between px-2">
