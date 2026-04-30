@@ -71,10 +71,11 @@ function App() {
   if (compactMode) {
     return (
       <div
-        className="compact-window flex min-h-screen items-center bg-background text-foreground selection:bg-primary/30"
+        className="compact-window flex min-h-screen flex-col items-center bg-background text-foreground selection:bg-primary/30"
         data-tauri-drag-region
       >
-        <div className="flex w-full items-center justify-between px-5 py-3">
+        <div className="mt-2 h-[3px] w-8 rounded-full bg-foreground/15" />
+        <div className="flex w-full items-center justify-between px-5 py-2">
           <div className="min-w-0 flex-1">
             <div className="font-mono text-3xl leading-none tabular-nums tracking-widest text-primary">
               {formatTotalTime(activeTodo?.liveMs ?? 0)}
