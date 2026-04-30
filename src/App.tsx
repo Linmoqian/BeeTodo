@@ -48,6 +48,9 @@ function App() {
 
   const completedCount = todos.filter((t) => t.completed).length;
   const activeTodo = todos.find((todo) => todo.id === activeTimerId) ?? null;
+  const lastActiveTodoRef = useRef(activeTodo);
+  if (activeTodo) lastActiveTodoRef.current = activeTodo;
+  const compactTodo = activeTodo ?? lastActiveTodoRef.current;
   const setCompactWindowMode = async (enabled: boolean) => {
     setCompactMode(enabled);
 
@@ -95,19 +98,19 @@ function App() {
         <div className="flex w-full items-center justify-between px-5 py-2">
           <div className="min-w-0 flex-1">
             <div className="font-mono text-3xl leading-none tabular-nums tracking-widest text-primary">
-              {formatTotalTime(activeTodo?.liveMs ?? 0)}
+              {formatTotalTime(compactTodo?.liveMs ?? 0)}
             </div>
             <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
-              {activeTodo?.text ?? "暂无任务"}
+              {compactTodo?.text ?? "暂无任务"}
             </p>
           </div>
-          {activeTodo && (
+          {compactTodo && (
             <button
               type="button"
-              onClick={() => void pauseTimer(activeTodo.id)}
+              onClick={() => void (activeTimerId ? pauseTimer(compactTodo.id) : startTimer(compactTodo.id))}
               className="ml-4 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-              aria-label="暂停计时"
-              title="暂停"
+              aria-label={activeTimerId ? "暂停计时" : "继续计时"}
+              title={activeTimerId ? "暂停" : "继续"}
             >
               <Pause size={13} className="fill-current" />
             </button>
