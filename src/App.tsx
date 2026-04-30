@@ -79,21 +79,16 @@ function App() {
         data-tauri-drag-region
       >
         <div className="mt-2 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void getCurrentWindow().minimize()}
-            className="h-[3px] w-4 rounded-full bg-foreground/15 transition-colors hover:bg-foreground/30"
-            aria-label="最小化"
-            title="最小化"
-          />
           <div className="h-[3px] w-8 rounded-full bg-foreground/15" />
           <button
             type="button"
             onClick={() => void setCompactWindowMode(false)}
-            className="h-[3px] w-4 rounded-full bg-foreground/15 transition-colors hover:bg-foreground/30"
+            className="flex h-4 w-4 items-center justify-center text-foreground/15 transition-colors hover:text-foreground/40"
             aria-label="恢复完整窗口"
             title="恢复"
-          />
+          >
+            <Maximize2 size={11} />
+          </button>
         </div>
         <div className="flex w-full items-center justify-between px-5 py-2">
           <div className="min-w-0 flex-1">
