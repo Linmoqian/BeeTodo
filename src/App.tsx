@@ -90,12 +90,10 @@ function App() {
           <button
             type="button"
             onClick={() => void setCompactWindowMode(false)}
-            className="flex h-3.5 w-3.5 items-center justify-center text-foreground/15 transition-colors hover:text-foreground/40"
+            className="h-[3px] w-4 rounded-full bg-foreground/15 transition-colors hover:bg-foreground/30"
             aria-label="恢复完整窗口"
             title="恢复"
-          >
-            <Maximize2 size={10} />
-          </button>
+          />
         </div>
         <div className="flex w-full items-center justify-between px-5 py-2">
           <div className="min-w-0 flex-1">
