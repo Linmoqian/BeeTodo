@@ -42,6 +42,6 @@ jobs:
 
       - run: npm ci
 
-      - uses: tauri-apps/tauri-action@v1
+      - uses: tauri-apps/tauri-action@v0
         with:
           args: ${{ matrix.args }}
