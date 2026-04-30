@@ -58,6 +58,7 @@ function App() {
         await currentWindow.setAlwaysOnTop(true);
         await currentWindow.setDecorations(false);
         await currentWindow.setResizable(false);
+        await currentWindow.setMaximizable(false);
         await currentWindow.setSize(new LogicalSize(360, 110));
         return;
       }
@@ -65,6 +66,7 @@ function App() {
       const normalSize = normalWindowSizeRef.current;
       await currentWindow.setAlwaysOnTop(false);
       await currentWindow.setResizable(true);
+      await currentWindow.setMaximizable(true);
       await currentWindow.setDecorations(true);
       await currentWindow.setSize(normalSize ?? new LogicalSize(800, 600));
     } catch (error) {
