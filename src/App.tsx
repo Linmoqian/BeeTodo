@@ -55,11 +55,13 @@ function App() {
       const currentWindow = getCurrentWindow();
       if (enabled) {
         normalWindowSizeRef.current = await currentWindow.innerSize();
+        await currentWindow.setDecorations(false);
         await currentWindow.setSize(new LogicalSize(360, 180));
         return;
       }
 
       const normalSize = normalWindowSizeRef.current;
+      await currentWindow.setDecorations(true);
       await currentWindow.setSize(normalSize ?? new LogicalSize(800, 600));
     } catch (error) {
       console.error("Failed to update compact window mode", error);
@@ -68,7 +70,7 @@ function App() {
 
   if (compactMode) {
     return (
-      <div className="noise-bg relative flex min-h-screen items-center bg-background px-5 py-4 text-foreground selection:bg-primary/30">
+      <div className="noise-bg relative flex min-h-screen items-center bg-background px-5 py-4 text-foreground selection:bg-primary/30" data-tauri-drag-region>
         <div className="relative z-10 flex w-full items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
