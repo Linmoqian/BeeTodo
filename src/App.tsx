@@ -63,6 +63,7 @@ function App() {
         await currentWindow.setResizable(false);
         await currentWindow.setMaximizable(false);
         await currentWindow.setSize(new LogicalSize(360, 110));
+        document.documentElement.style.background = "transparent";
         return;
       }
 
@@ -71,7 +72,9 @@ function App() {
       await currentWindow.setResizable(true);
       await currentWindow.setMaximizable(true);
       await currentWindow.setDecorations(true);
+      await currentWindow.setDecorations(true);
       await currentWindow.setSize(normalSize ?? new LogicalSize(800, 600));
+      document.documentElement.style.background = "";
     } catch (error) {
       console.error("Failed to update compact window mode", error);
     }
@@ -80,7 +83,7 @@ function App() {
   if (compactMode) {
     return (
       <div
-        className="compact-window flex min-h-screen flex-col items-center bg-background text-foreground selection:bg-primary/30"
+        className="compact-window flex min-h-screen flex-col items-center bg-background/70 text-foreground selection:bg-primary/30 backdrop-blur-xl"
         data-tauri-drag-region
       >
         <div className="relative mt-2 flex w-full items-center justify-center">
@@ -96,24 +99,23 @@ function App() {
           </button>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center px-5">
-          <div className="rounded-xl bg-foreground/5 px-6 py-3 backdrop-blur-sm">
-            <div className="font-mono text-3xl leading-none tabular-nums tracking-widest text-primary text-center">
-              {formatTotalTime(compactTodo?.liveMs ?? 0)}
-            </div>
-            <div className="mt-1.5 flex items-center justify-center gap-2">
-              <p className="truncate max-w-48 text-[11px] text-muted-foreground">
-                {compactTodo?.text ?? "暂无任务"}
-              </p>
-              {compactTodo && (
-                <button
-                  type="button"
-                  onClick={() => void (activeTimerId ? pauseTimer(compactTodo.id) : startTimer(compactTodo.id))}
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-                  aria-label={activeTimerId ? "暂停计时" : "继续计时"}
-                  title={activeTimerId ? "暂停" : "继续"}
-                >
-                  {activeTimerId ? <Pause size={10} className="fill-current" /> : <Play size={10} className="fill-current" />}
-                </button>
+          <div className="font-mono text-3xl leading-none tabular-nums tracking-widest text-primary text-center">
+            {formatTotalTime(compactTodo?.liveMs ?? 0)}
+          </div>
+          <div className="mt-1.5 flex items-center justify-center gap-2">
+            <p className="truncate max-w-48 text-[11px] text-muted-foreground">
+              {compactTodo?.text ?? "暂无任务"}
+            </p>
+            {compactTodo && (
+              <button
+                type="button"
+                onClick={() => void (activeTimerId ? pauseTimer(compactTodo.id) : startTimer(compactTodo.id))}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+                aria-label={activeTimerId ? "暂停计时" : "继续计时"}
+                title={activeTimerId ? "暂停" : "继续"}
+              >
+                {activeTimerId ? <Pause size={10} className="fill-current" /> : <Play size={10} className="fill-current" />}
+              </button>
               )}
             </div>
           </div>
