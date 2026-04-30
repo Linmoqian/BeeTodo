@@ -127,7 +127,7 @@ export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: numbe
             </div>
             <input
               type="range"
-              min={10}
+              min={0}
               max={100}
               value={compactOpacity}
               onChange={async (e) => {
