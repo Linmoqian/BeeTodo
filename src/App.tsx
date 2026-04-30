@@ -78,12 +78,12 @@ function App() {
         className="compact-window flex min-h-screen flex-col items-center bg-background text-foreground selection:bg-primary/30"
         data-tauri-drag-region
       >
-        <div className="mt-2 flex items-center gap-2">
+        <div className="relative mt-2 flex w-full items-center justify-center">
           <div className="h-[3px] w-8 rounded-full bg-foreground/15" />
           <button
             type="button"
             onClick={() => void setCompactWindowMode(false)}
-            className="flex h-4 w-4 items-center justify-center text-foreground/15 transition-colors hover:text-foreground/40"
+            className="absolute right-4 flex h-4 w-4 items-center justify-center text-foreground/15 transition-colors hover:text-foreground/40"
             aria-label="恢复完整窗口"
             title="恢复"
           >
