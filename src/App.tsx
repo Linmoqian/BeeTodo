@@ -5,7 +5,7 @@ import { useTodos } from "./hooks/useTodos";
 import { TodoInput } from "./components/TodoInput";
 import { TodoList } from "./components/TodoList";
 import { ThemeSettings } from "./components/ThemeSettings";
-import { Maximize2, Minimize2, Pause, Timer } from "lucide-react";
+import { Maximize2, Minimize2, Pause, Play, Timer } from "lucide-react";
 import "./index.css";
 
 function formatTotalTime(ms: number): string {
@@ -112,7 +112,7 @@ function App() {
               aria-label={activeTimerId ? "暂停计时" : "继续计时"}
               title={activeTimerId ? "暂停" : "继续"}
             >
-              <Pause size={13} className="fill-current" />
+              {activeTimerId ? <Pause size={13} className="fill-current" /> : <Play size={13} className="fill-current" />}
             </button>
           )}
         </div>
