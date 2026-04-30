@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { LogicalSize, type PhysicalSize } from "@tauri-apps/api/dpi";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useTodos } from "./hooks/useTodos";
 import { TodoInput } from "./components/TodoInput";
 import { TodoList } from "./components/TodoList";
 import { ThemeSettings } from "./components/ThemeSettings";
-import { Timer } from "lucide-react";
+import { Maximize2, Minimize2, Pause, Timer } from "lucide-react";
 import "./index.css";
 
 function formatTotalTime(ms: number): string {
@@ -25,6 +27,8 @@ function useCurrentTime() {
 }
 
 function App() {
+  const normalWindowSizeRef = useRef<PhysicalSize | null>(null);
+  const [compactMode, setCompactMode] = useState(false);
   const {
     todos,
     totalMs,
@@ -43,6 +47,66 @@ function App() {
   const timeString = currentTime.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
 
   const completedCount = todos.filter((t) => t.completed).length;
+  const activeTodo = todos.find((todo) => todo.id === activeTimerId) ?? null;
+  const setCompactWindowMode = async (enabled: boolean) => {
+    setCompactMode(enabled);
+
+    try {
+      const currentWindow = getCurrentWindow();
+      if (enabled) {
+        normalWindowSizeRef.current = await currentWindow.innerSize();
+        await currentWindow.setSize(new LogicalSize(360, 180));
+        return;
+      }
+
+      const normalSize = normalWindowSizeRef.current;
+      await currentWindow.setSize(normalSize ?? new LogicalSize(800, 600));
+    } catch (error) {
+      console.error("Failed to update compact window mode", error);
+    }
+  };
+
+  if (compactMode) {
+    return (
+      <div className="noise-bg relative flex min-h-screen items-center bg-background px-5 py-4 text-foreground selection:bg-primary/30">
+        <div className="relative z-10 flex w-full items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+              正在进行
+            </p>
+            <h1 className="truncate text-base font-semibold tracking-tight">
+              {activeTodo?.text ?? "暂无正在计时的任务"}
+            </h1>
+            <div className="mt-2 font-mono text-3xl leading-none tabular-nums tracking-widest text-primary">
+              {formatTotalTime(activeTodo?.liveMs ?? 0)}
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => void setCompactWindowMode(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-[var(--settings-btn-hover)] hover:text-foreground"
+              aria-label="恢复完整窗口"
+              title="恢复"
+            >
+              <Maximize2 size={15} />
+            </button>
+            {activeTodo && (
+              <button
+                type="button"
+                onClick={() => void pauseTimer(activeTodo.id)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+                aria-label="暂停计时"
+                title="暂停"
+              >
+                <Pause size={15} className="fill-current" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="noise-bg relative min-h-screen bg-background text-foreground selection:bg-primary/30">
@@ -63,16 +127,27 @@ function App() {
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <div className="font-mono text-xs tabular-nums tracking-widest text-muted-foreground opacity-80 mb-0.5">
-              {timeString}
+          <div className="flex items-start gap-3">
+            <div className="text-right">
+              <div className="font-mono text-xs tabular-nums tracking-widest text-muted-foreground opacity-80 mb-0.5">
+                {timeString}
+              </div>
+              <div className="font-mono text-lg leading-none tabular-nums tracking-widest text-primary">
+                {formatTotalTime(totalMs)}
+              </div>
+              <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                {completedCount}/{todos.length} 已完成
+              </div>
             </div>
-            <div className="font-mono text-lg leading-none tabular-nums tracking-widest text-primary">
-              {formatTotalTime(totalMs)}
-            </div>
-            <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-              {completedCount}/{todos.length} 已完成
-            </div>
+            <button
+              type="button"
+              onClick={() => void setCompactWindowMode(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-[var(--settings-btn-hover)] hover:text-foreground"
+              aria-label="切换小窗模式"
+              title="小窗模式"
+            >
+              <Minimize2 size={16} />
+            </button>
           </div>
         </header>
 
