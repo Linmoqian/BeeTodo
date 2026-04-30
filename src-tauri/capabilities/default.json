@@ -9,6 +9,7 @@
     "core:window:allow-set-decorations",
     "core:window:allow-set-resizable",
     "core:window:allow-set-always-on-top",
+    "core:window:allow-minimize",
     "opener:default"
   ]
 }

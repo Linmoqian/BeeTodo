@@ -78,7 +78,25 @@ function App() {
         className="compact-window flex min-h-screen flex-col items-center bg-background text-foreground selection:bg-primary/30"
         data-tauri-drag-region
       >
-        <div className="mt-2 h-[3px] w-8 rounded-full bg-foreground/15" />
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void getCurrentWindow().minimize()}
+            className="h-[3px] w-4 rounded-full bg-foreground/15 transition-colors hover:bg-foreground/30"
+            aria-label="最小化"
+            title="最小化"
+          />
+          <div className="h-[3px] w-8 rounded-full bg-foreground/15" />
+          <button
+            type="button"
+            onClick={() => void setCompactWindowMode(false)}
+            className="flex h-3.5 w-3.5 items-center justify-center text-foreground/15 transition-colors hover:text-foreground/40"
+            aria-label="恢复完整窗口"
+            title="恢复"
+          >
+            <Maximize2 size={10} />
+          </button>
+        </div>
         <div className="flex w-full items-center justify-between px-5 py-2">
           <div className="min-w-0 flex-1">
             <div className="font-mono text-3xl leading-none tabular-nums tracking-widest text-primary">
@@ -88,28 +106,17 @@ function App() {
               {activeTodo?.text ?? "暂无任务"}
             </p>
           </div>
-          <div className="ml-4 flex shrink-0 items-center gap-1.5">
-            {activeTodo && (
-              <button
-                type="button"
-                onClick={() => void pauseTimer(activeTodo.id)}
-                className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-                aria-label="暂停计时"
-                title="暂停"
-              >
-                <Pause size={13} className="fill-current" />
-              </button>
-            )}
+          {activeTodo && (
             <button
               type="button"
-              onClick={() => void setCompactWindowMode(false)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-[var(--settings-btn-hover)] hover:text-foreground"
-              aria-label="恢复完整窗口"
-              title="恢复"
+              onClick={() => void pauseTimer(activeTodo.id)}
+              className="ml-4 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+              aria-label="暂停计时"
+              title="暂停"
             >
-              <Maximize2 size={13} />
+              <Pause size={13} className="fill-current" />
             </button>
-          </div>
+          )}
         </div>
       </div>
     );
