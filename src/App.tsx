@@ -56,7 +56,7 @@ function App() {
       if (enabled) {
         normalWindowSizeRef.current = await currentWindow.innerSize();
         await currentWindow.setDecorations(false);
-        await currentWindow.setSize(new LogicalSize(360, 180));
+        await currentWindow.setSize(new LogicalSize(360, 110));
         return;
       }
 
@@ -70,40 +70,40 @@ function App() {
 
   if (compactMode) {
     return (
-      <div className="noise-bg relative flex min-h-screen items-center bg-background px-5 py-4 text-foreground selection:bg-primary/30" data-tauri-drag-region>
-        <div className="relative z-10 flex w-full items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-              正在进行
-            </p>
-            <h1 className="truncate text-base font-semibold tracking-tight">
-              {activeTodo?.text ?? "暂无正在计时的任务"}
-            </h1>
-            <div className="mt-2 font-mono text-3xl leading-none tabular-nums tracking-widest text-primary">
+      <div
+        className="compact-window flex min-h-screen items-center bg-background text-foreground selection:bg-primary/30"
+        data-tauri-drag-region
+      >
+        <div className="flex w-full items-center justify-between px-5 py-3">
+          <div className="min-w-0 flex-1">
+            <div className="font-mono text-3xl leading-none tabular-nums tracking-widest text-primary">
               {formatTotalTime(activeTodo?.liveMs ?? 0)}
             </div>
+            <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
+              {activeTodo?.text ?? "暂无任务"}
+            </p>
           </div>
-          <div className="flex shrink-0 flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => void setCompactWindowMode(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-[var(--settings-btn-hover)] hover:text-foreground"
-              aria-label="恢复完整窗口"
-              title="恢复"
-            >
-              <Maximize2 size={15} />
-            </button>
+          <div className="ml-4 flex shrink-0 items-center gap-1.5">
             {activeTodo && (
               <button
                 type="button"
                 onClick={() => void pauseTimer(activeTodo.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
                 aria-label="暂停计时"
                 title="暂停"
               >
-                <Pause size={15} className="fill-current" />
+                <Pause size={13} className="fill-current" />
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => void setCompactWindowMode(false)}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-[var(--settings-btn-hover)] hover:text-foreground"
+              aria-label="恢复完整窗口"
+              title="恢复"
+            >
+              <Maximize2 size={13} />
+            </button>
           </div>
         </div>
       </div>
