@@ -234,3 +234,12 @@
   pointer-events: none;
   z-index: 0;
 }
+
+/* Windows 拖拽区域 */
+*[data-tauri-drag-region] {
+  app-region: drag;
+}
+
+*[data-tauri-drag-region] button {
+  app-region: no-drag;
+}
