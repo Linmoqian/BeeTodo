@@ -8,7 +8,7 @@ interface AppSettings {
   compactOpacity: number;
 }
 
-export function ThemeSettings() {
+export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: number) => void }) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [alwaysOnTop, setAlwaysOnTop] = useState(false);
@@ -133,6 +133,7 @@ export function ThemeSettings() {
               onChange={async (e) => {
                 const v = Number(e.target.value);
                 setCompactOpacity(v);
+                onOpacityChange?.(v);
                 try {
                   await invoke<AppSettings>("set_compact_opacity", { opacity: v });
                 } catch (error) {

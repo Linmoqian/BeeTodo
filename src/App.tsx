@@ -139,7 +139,7 @@ function App() {
         {/* Header */}
         <header className="mb-8 flex items-center justify-between px-2">
           <div className="flex items-center gap-2.5">
-            <ThemeSettings />
+            <ThemeSettings onOpacityChange={setCompactOpacity} />
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Timer size={16} className="text-primary" />
             </div>
