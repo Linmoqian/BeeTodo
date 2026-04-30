@@ -56,11 +56,13 @@ function App() {
       if (enabled) {
         normalWindowSizeRef.current = await currentWindow.innerSize();
         await currentWindow.setDecorations(false);
+        await currentWindow.setResizable(false);
         await currentWindow.setSize(new LogicalSize(360, 110));
         return;
       }
 
       const normalSize = normalWindowSizeRef.current;
+      await currentWindow.setResizable(true);
       await currentWindow.setDecorations(true);
       await currentWindow.setSize(normalSize ?? new LogicalSize(800, 600));
     } catch (error) {
