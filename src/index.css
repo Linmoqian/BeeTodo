@@ -256,5 +256,4 @@
 
 .compact-window {
   animation: compact-breathe 3s ease-in-out infinite;
-  transform-origin: center center;
 }
