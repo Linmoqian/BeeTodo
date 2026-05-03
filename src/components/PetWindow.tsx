@@ -10,29 +10,65 @@ interface AppSettings {
   petEnabled: boolean;
 }
 
-type PetMood = "idle" | "focus" | "celebrate";
+type PetAction = "idle" | "focus" | "pause" | "celebrate" | "sleep";
 
-const PET_ACTIONS: Record<PetMood, string[]> = {
-  idle: [
-    "/pet-actions/idle-heart.png",
-    "/pet-actions/idle-smile.png",
-    "/pet-actions/idle-heart.png",
-    "/pet-actions/idle-wink.png",
-  ],
-  focus: [
-    "/pet-actions/focus-wing-up.png",
-    "/pet-actions/focus-wing-down.png",
-  ],
-  celebrate: [
-    "/pet-actions/celebrate-hearts.png",
-    "/pet-actions/celebrate-many-hearts.png",
-  ],
-};
+interface PetActionConfig {
+  frames: string[];
+  intervalMs: number;
+  loop: boolean;
+}
 
-const PET_ACTION_INTERVALS: Record<PetMood, number> = {
-  idle: 900,
-  focus: 260,
-  celebrate: 340,
+const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
+  idle: {
+    frames: [
+      "/pet-actions/idle-01.png",
+      "/pet-actions/idle-02.png",
+      "/pet-actions/idle-03.png",
+      "/pet-actions/idle-04.png",
+    ],
+    intervalMs: 760,
+    loop: true,
+  },
+  focus: {
+    frames: [
+      "/pet-actions/focus-01.png",
+      "/pet-actions/focus-02.png",
+      "/pet-actions/focus-03.png",
+      "/pet-actions/focus-04.png",
+    ],
+    intervalMs: 360,
+    loop: true,
+  },
+  pause: {
+    frames: [
+      "/pet-actions/pause-01.png",
+      "/pet-actions/pause-02.png",
+      "/pet-actions/pause-03.png",
+      "/pet-actions/pause-04.png",
+    ],
+    intervalMs: 900,
+    loop: true,
+  },
+  celebrate: {
+    frames: [
+      "/pet-actions/celebrate-01.png",
+      "/pet-actions/celebrate-02.png",
+      "/pet-actions/celebrate-03.png",
+      "/pet-actions/celebrate-04.png",
+    ],
+    intervalMs: 320,
+    loop: false,
+  },
+  sleep: {
+    frames: [
+      "/pet-actions/sleep-01.png",
+      "/pet-actions/sleep-02.png",
+      "/pet-actions/sleep-03.png",
+      "/pet-actions/sleep-04.png",
+    ],
+    intervalMs: 420,
+    loop: false,
+  },
 };
 
 function getLiveMs(todo: StoredTodo, now: number) {
@@ -51,9 +87,23 @@ function formatPetTime(ms: number) {
 export function PetWindow() {
   const [todos, setTodos] = useState<StoredTodo[]>([]);
   const [now, setNow] = useState(Date.now());
-  const [celebrating, setCelebrating] = useState(false);
+  const [actionOverride, setActionOverride] = useState<PetAction | null>(null);
   const [actionFrame, setActionFrame] = useState(0);
   const completedCountRef = useRef<number | null>(null);
+  const overrideTimerRef = useRef<number | null>(null);
+
+  const playOnce = (action: PetAction) => {
+    const config = PET_ACTIONS[action];
+    if (overrideTimerRef.current !== null) {
+      window.clearTimeout(overrideTimerRef.current);
+    }
+
+    setActionOverride(action);
+    overrideTimerRef.current = window.setTimeout(() => {
+      setActionOverride(null);
+      overrideTimerRef.current = null;
+    }, config.frames.length * config.intervalMs);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -68,8 +118,7 @@ export function PetWindow() {
           completedCountRef.current !== null &&
           completedCount > completedCountRef.current
         ) {
-          setCelebrating(true);
-          window.setTimeout(() => setCelebrating(false), 2400);
+          playOnce("celebrate");
         }
         completedCountRef.current = completedCount;
         setTodos(nextTodos);
@@ -84,6 +133,9 @@ export function PetWindow() {
     return () => {
       mounted = false;
       window.clearInterval(interval);
+      if (overrideTimerRef.current !== null) {
+        window.clearTimeout(overrideTimerRef.current);
+      }
     };
   }, []);
 
@@ -92,9 +144,17 @@ export function PetWindow() {
     [todos],
   );
   const incompleteCount = todos.filter((todo) => !todo.completed).length;
-  const mood: PetMood = celebrating ? "celebrate" : activeTodo ? "focus" : "idle";
-  const actionFrames = PET_ACTIONS[mood];
-  const petImage = actionFrames[actionFrame % actionFrames.length];
+  const baseAction: PetAction = activeTodo
+    ? "focus"
+    : incompleteCount > 0
+      ? "idle"
+      : "pause";
+  const currentAction = actionOverride ?? baseAction;
+  const actionConfig = PET_ACTIONS[currentAction];
+  const frameIndex = actionConfig.loop
+    ? actionFrame % actionConfig.frames.length
+    : Math.min(actionFrame, actionConfig.frames.length - 1);
+  const petImage = actionConfig.frames[frameIndex];
   const statusText = activeTodo
     ? formatPetTime(getLiveMs(activeTodo, now))
     : incompleteCount > 0
@@ -102,6 +162,11 @@ export function PetWindow() {
       : "休息中";
 
   const closePet = async () => {
+    playOnce("sleep");
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, PET_ACTIONS.sleep.frames.length * PET_ACTIONS.sleep.intervalMs);
+    });
+
     try {
       await invoke<AppSettings>("set_pet_enabled", { enabled: false });
     } catch (error) {
@@ -115,12 +180,12 @@ export function PetWindow() {
     setActionFrame(0);
     const interval = window.setInterval(() => {
       setActionFrame((frame) => frame + 1);
-    }, PET_ACTION_INTERVALS[mood]);
+    }, actionConfig.intervalMs);
     return () => window.clearInterval(interval);
-  }, [mood]);
+  }, [actionConfig.intervalMs, currentAction]);
 
   return (
-    <div className={`pet-window pet-window-${mood}`} data-tauri-drag-region>
+    <div className={`pet-window pet-window-${currentAction}`} data-tauri-drag-region>
       <button
         type="button"
         className="pet-close"
@@ -141,7 +206,11 @@ export function PetWindow() {
 
       <div className="pet-bubble">
         <span className="pet-status">
-          {mood === "celebrate" ? "完成啦" : statusText}
+          {currentAction === "celebrate"
+            ? "完成啦"
+            : currentAction === "sleep"
+              ? "晚安"
+              : statusText}
         </span>
       </div>
     </div>

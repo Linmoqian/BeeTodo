@@ -207,6 +207,16 @@
     }
 }
 
+html.pet-view,
+html.pet-view body,
+html.pet-view #root {
+  background: transparent !important;
+}
+
+html.pet-view body {
+  overflow: hidden;
+}
+
 /* ===== Timer pulse animation ===== */
 @keyframes timer-pulse {
   0%, 100% { opacity: 1; }
@@ -294,6 +304,11 @@
   animation: pet-focus-hover 520ms ease-in-out infinite;
 }
 
+.pet-window-pause .pet-stage,
+.pet-window-sleep .pet-stage {
+  animation: pet-sleep-breathe 3.2s ease-in-out infinite;
+}
+
 .pet-window-celebrate .pet-stage {
   animation: pet-celebrate-hop 680ms ease-in-out infinite;
 }
@@ -312,6 +327,10 @@
 
 .pet-window-celebrate .pet-bee {
   filter: drop-shadow(0 16px 24px color-mix(in oklch, var(--primary) 50%, transparent));
+}
+
+.pet-window-sleep .pet-bee {
+  filter: drop-shadow(0 12px 18px rgb(0 0 0 / 16%));
 }
 
 .pet-shadow {
@@ -334,7 +353,7 @@
   transform: translateX(-50%);
   border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
   border-radius: 999px;
-  background: color-mix(in oklch, var(--background) 78%, transparent);
+  background: color-mix(in oklch, var(--background) 58%, transparent);
   padding: 5px 10px;
   text-align: center;
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
@@ -400,5 +419,14 @@
   }
   70% {
     transform: translateY(-5px) rotate(4deg);
+  }
+}
+
+@keyframes pet-sleep-breathe {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(2px) scale(0.98);
   }
 }
