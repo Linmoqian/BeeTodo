@@ -27,7 +27,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/idle-03.png",
       "/pet-actions/idle-04.png",
     ],
-    intervalMs: 760,
+    intervalMs: 15000,
     loop: true,
   },
   focus: {
@@ -37,7 +37,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/focus-03.png",
       "/pet-actions/focus-04.png",
     ],
-    intervalMs: 360,
+    intervalMs: 15000,
     loop: true,
   },
   pause: {
@@ -47,7 +47,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/pause-03.png",
       "/pet-actions/pause-04.png",
     ],
-    intervalMs: 900,
+    intervalMs: 15000,
     loop: true,
   },
   celebrate: {
@@ -57,7 +57,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/celebrate-03.png",
       "/pet-actions/celebrate-04.png",
     ],
-    intervalMs: 320,
+    intervalMs: 15000,
     loop: true,
   },
   sleep: {
@@ -67,7 +67,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/sleep-03.png",
       "/pet-actions/sleep-04.png",
     ],
-    intervalMs: 420,
+    intervalMs: 15000,
     loop: false,
   },
   love: {
@@ -77,7 +77,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/love-03.png",
       "/pet-actions/love-04.png",
     ],
-    intervalMs: 520,
+    intervalMs: 15000,
     loop: true,
   },
 };
@@ -222,8 +222,14 @@ export function PetWindow() {
     playTemporary("love");
   };
 
+  const startPetDrag = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    void getCurrentWindow().startDragging();
+  };
+
   const openContextMenu = (event: MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation();
     const menuWidth = 116;
     const menuHeight = 112;
     const x = Math.min(event.clientX, window.innerWidth - menuWidth - 8);
@@ -248,16 +254,25 @@ export function PetWindow() {
     return () => window.removeEventListener("blur", hideMenu);
   }, []);
 
+  useEffect(() => {
+    const preventNativeMenu = (event: globalThis.MouseEvent) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("contextmenu", preventNativeMenu, true);
+    return () => window.removeEventListener("contextmenu", preventNativeMenu, true);
+  }, []);
+
   return (
     <div
       className={`pet-window pet-window-${currentAction}`}
-      data-tauri-drag-region
       onClick={() => setMenuPosition(null)}
       onContextMenu={openContextMenu}
     >
       <div
         className="pet-stage"
         aria-live="polite"
+        onMouseDown={startPetDrag}
       >
         <img className="pet-bee" src={petImage} alt="蜜蜂桌宠" />
         <span className="pet-shadow" />
@@ -274,6 +289,10 @@ export function PetWindow() {
           className="pet-menu"
           style={{ left: menuPosition.x, top: menuPosition.y }}
           onClick={(event) => event.stopPropagation()}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
         >
           <button type="button" onClick={() => void closePet()}>
             <Power size={13} />

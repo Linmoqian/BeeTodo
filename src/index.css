@@ -297,24 +297,24 @@ html.pet-view body {
 }
 
 .pet-window-idle .pet-stage {
-  animation: pet-idle-float 2.8s ease-in-out infinite;
+  animation: pet-soft-float 3.6s ease-in-out infinite;
 }
 
 .pet-window-focus .pet-stage {
-  animation: pet-focus-hover 520ms ease-in-out infinite;
+  animation: pet-soft-float 3.2s ease-in-out infinite;
 }
 
 .pet-window-pause .pet-stage,
 .pet-window-sleep .pet-stage {
-  animation: pet-sleep-breathe 3.2s ease-in-out infinite;
+  animation: pet-soft-float 4s ease-in-out infinite;
 }
 
 .pet-window-celebrate .pet-stage {
-  animation: pet-celebrate-hop 680ms ease-in-out infinite;
+  animation: pet-soft-float 3s ease-in-out infinite;
 }
 
 .pet-window-love .pet-stage {
-  animation: pet-love-bounce 860ms ease-in-out infinite;
+  animation: pet-soft-float 3s ease-in-out infinite;
 }
 
 .pet-bee {
@@ -415,53 +415,11 @@ html.pet-view body {
   background: var(--primary);
 }
 
-@keyframes pet-idle-float {
+@keyframes pet-soft-float {
   0%, 100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes pet-focus-hover {
-  0%, 100% {
-    transform: translateY(0) rotate(-1deg);
-  }
-  50% {
-    transform: translateY(-7px) rotate(1deg);
-  }
-}
-
-@keyframes pet-celebrate-hop {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  45% {
-    transform: translateY(-13px) rotate(-5deg);
-  }
-  70% {
-    transform: translateY(-5px) rotate(4deg);
-  }
-}
-
-@keyframes pet-love-bounce {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg) scale(1);
-  }
-  45% {
-    transform: translateY(-7px) rotate(-2deg) scale(1.03);
-  }
-  70% {
-    transform: translateY(-2px) rotate(2deg) scale(1.01);
-  }
-}
-
-@keyframes pet-sleep-breathe {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(2px) scale(0.98);
+    transform: translateY(-4px);
   }
 }
