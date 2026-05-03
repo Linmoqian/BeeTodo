@@ -264,3 +264,99 @@
 .compact-window {
   animation: compact-breathe 3s ease-in-out infinite;
 }
+
+/* ===== Pet window ===== */
+.pet-window {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+}
+
+.pet-stage {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 50% 85%;
+}
+
+.pet-bee {
+  width: 118px;
+  height: 118px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgb(0 0 0 / 28%));
+  pointer-events: none;
+}
+
+.pet-window-focus .pet-bee {
+  filter: drop-shadow(0 14px 20px color-mix(in oklch, var(--primary) 35%, transparent));
+}
+
+.pet-window-celebrate .pet-bee {
+  filter: drop-shadow(0 16px 24px color-mix(in oklch, var(--primary) 50%, transparent));
+}
+
+.pet-shadow {
+  position: absolute;
+  bottom: -5px;
+  width: 72px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 18%);
+  filter: blur(8px);
+  z-index: -1;
+}
+
+.pet-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  max-width: 130px;
+  min-width: 76px;
+  transform: translateX(-50%);
+  border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--background) 78%, transparent);
+  padding: 5px 10px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(12px);
+}
+
+.pet-status {
+  display: block;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  z-index: 2;
+  display: flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: rgb(255 255 255 / 70%);
+  background: rgb(0 0 0 / 24%);
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.pet-close:hover {
+  color: white;
+  background: rgb(0 0 0 / 42%);
+}

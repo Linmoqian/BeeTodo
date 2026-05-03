@@ -7,6 +7,7 @@ import { TodoInput } from "./components/TodoInput";
 import { TodoList } from "./components/TodoList";
 import { ThemeSettings } from "./components/ThemeSettings";
 import { Maximize2, Minimize2, Pause, Play, Timer } from "lucide-react";
+import { openPetWindow } from "./lib/petWindow";
 import "./index.css";
 
 function formatTotalTime(ms: number): string {
@@ -33,8 +34,13 @@ function App() {
   const [compactOpacity, setCompactOpacity] = useState(60);
 
   useEffect(() => {
-    invoke<{ compactOpacity: number }>("get_settings")
-      .then((s) => setCompactOpacity(s.compactOpacity))
+    invoke<{ compactOpacity: number; petEnabled: boolean }>("get_settings")
+      .then((s) => {
+        setCompactOpacity(s.compactOpacity);
+        if (s.petEnabled) {
+          void openPetWindow();
+        }
+      })
       .catch(console.error);
   }, []);
   const {

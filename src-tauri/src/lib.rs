@@ -31,6 +31,8 @@ struct AppSettings {
     always_on_top: bool,
     #[serde(default = "default_compact_opacity")]
     compact_opacity: u8,
+    #[serde(default)]
+    pet_enabled: bool,
 }
 
 fn default_compact_opacity() -> u8 {
@@ -42,6 +44,7 @@ impl Default for AppSettings {
         Self {
             always_on_top: false,
             compact_opacity: default_compact_opacity(),
+            pet_enabled: false,
         }
     }
 }
@@ -282,6 +285,14 @@ fn set_compact_opacity(
     Ok(store.settings.clone())
 }
 
+#[tauri::command]
+fn set_pet_enabled(state: State<'_, AppState>, enabled: bool) -> Result<AppSettings, String> {
+    let mut store = state.store.lock().map_err(|err| err.to_string())?;
+    store.settings.pet_enabled = enabled;
+    persist_store(&state.store_path, &store)?;
+    Ok(store.settings.clone())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -312,7 +323,8 @@ pub fn run() {
             pin_todo_top,
             get_settings,
             set_always_on_top,
-            set_compact_opacity
+            set_compact_opacity,
+            set_pet_enabled
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

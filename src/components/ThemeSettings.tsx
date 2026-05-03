@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Settings } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { THEMES, useTheme } from "../hooks/useTheme";
+import { closePetWindow, openPetWindow } from "../lib/petWindow";
 
 interface AppSettings {
   alwaysOnTop: boolean;
   compactOpacity: number;
+  petEnabled: boolean;
 }
 
 export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: number) => void }) {
@@ -13,6 +15,7 @@ export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: numbe
   const [open, setOpen] = useState(false);
   const [alwaysOnTop, setAlwaysOnTop] = useState(false);
   const [compactOpacity, setCompactOpacity] = useState(60);
+  const [petEnabled, setPetEnabled] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -21,6 +24,7 @@ export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: numbe
       .then((settings) => {
         setAlwaysOnTop(settings.alwaysOnTop);
         setCompactOpacity(settings.compactOpacity);
+        setPetEnabled(settings.petEnabled);
       })
       .catch((error) => {
         console.error("Failed to load settings", error);
@@ -51,6 +55,23 @@ export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: numbe
     } catch (error) {
       setAlwaysOnTop(!enabled);
       console.error("Failed to set always on top", error);
+    }
+  };
+
+  const togglePetWindow = async () => {
+    const enabled = !petEnabled;
+    setPetEnabled(enabled);
+    try {
+      const settings = await invoke<AppSettings>("set_pet_enabled", { enabled });
+      setPetEnabled(settings.petEnabled);
+      if (settings.petEnabled) {
+        await openPetWindow();
+      } else {
+        await closePetWindow();
+      }
+    } catch (error) {
+      setPetEnabled(!enabled);
+      console.error("Failed to set pet window", error);
     }
   };
 
@@ -117,6 +138,22 @@ export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: numbe
               }`}
             >
               {alwaysOnTop ? "开启" : "关闭"}
+            </span>
+          </button>
+
+          <button
+            onClick={() => void togglePetWindow()}
+            className="flex w-full items-center rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-[var(--settings-item-hover)]"
+          >
+            <span className="text-[var(--settings-text)]">蜜蜂桌宠</span>
+            <span
+              className={`ml-auto rounded-full px-2 py-0.5 text-xs ${
+                petEnabled
+                  ? "bg-primary/20 text-[var(--settings-check)]"
+                  : "bg-secondary text-muted-foreground"
+              }`}
+            >
+              {petEnabled ? "开启" : "关闭"}
             </span>
           </button>
 
