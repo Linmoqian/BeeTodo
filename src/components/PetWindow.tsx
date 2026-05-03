@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { X } from "lucide-react";
+import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
+import { Heart, ListTodo, Power } from "lucide-react";
 import type { StoredTodo } from "../types";
 
 interface AppSettings {
@@ -10,7 +11,7 @@ interface AppSettings {
   petEnabled: boolean;
 }
 
-type PetAction = "idle" | "focus" | "pause" | "celebrate" | "sleep";
+type PetAction = "idle" | "focus" | "pause" | "celebrate" | "sleep" | "love";
 
 interface PetActionConfig {
   frames: string[];
@@ -57,7 +58,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/celebrate-04.png",
     ],
     intervalMs: 320,
-    loop: false,
+    loop: true,
   },
   sleep: {
     frames: [
@@ -69,7 +70,20 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
     intervalMs: 420,
     loop: false,
   },
+  love: {
+    frames: [
+      "/pet-actions/love-01.png",
+      "/pet-actions/love-02.png",
+      "/pet-actions/love-03.png",
+      "/pet-actions/love-04.png",
+    ],
+    intervalMs: 520,
+    loop: true,
+  },
 };
+
+const TEMP_ACTION_DURATION_MS = 12000;
+const CLOSE_SLEEP_DURATION_MS = 1800;
 
 function getLiveMs(todo: StoredTodo, now: number) {
   return todo.timerStartedAt
@@ -89,21 +103,28 @@ export function PetWindow() {
   const [now, setNow] = useState(Date.now());
   const [actionOverride, setActionOverride] = useState<PetAction | null>(null);
   const [actionFrame, setActionFrame] = useState(0);
+  const [menuPosition, setMenuPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const completedCountRef = useRef<number | null>(null);
   const overrideTimerRef = useRef<number | null>(null);
 
-  const playOnce = (action: PetAction) => {
-    const config = PET_ACTIONS[action];
-    if (overrideTimerRef.current !== null) {
-      window.clearTimeout(overrideTimerRef.current);
-    }
+  const playTemporary = useCallback(
+    (action: PetAction, durationMs = TEMP_ACTION_DURATION_MS) => {
+      if (overrideTimerRef.current !== null) {
+        window.clearTimeout(overrideTimerRef.current);
+      }
 
-    setActionOverride(action);
-    overrideTimerRef.current = window.setTimeout(() => {
-      setActionOverride(null);
-      overrideTimerRef.current = null;
-    }, config.frames.length * config.intervalMs);
-  };
+      setActionOverride(action);
+      setActionFrame(0);
+      overrideTimerRef.current = window.setTimeout(() => {
+        setActionOverride(null);
+        overrideTimerRef.current = null;
+      }, durationMs);
+    },
+    [],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -118,7 +139,7 @@ export function PetWindow() {
           completedCountRef.current !== null &&
           completedCount > completedCountRef.current
         ) {
-          playOnce("celebrate");
+          playTemporary("celebrate");
         }
         completedCountRef.current = completedCount;
         setTodos(nextTodos);
@@ -137,7 +158,7 @@ export function PetWindow() {
         window.clearTimeout(overrideTimerRef.current);
       }
     };
-  }, []);
+  }, [playTemporary]);
 
   const activeTodo = useMemo(
     () => todos.find((todo) => todo.timerStartedAt !== null) ?? null,
@@ -157,14 +178,19 @@ export function PetWindow() {
   const petImage = actionConfig.frames[frameIndex];
   const statusText = activeTodo
     ? formatPetTime(getLiveMs(activeTodo, now))
-    : incompleteCount > 0
-      ? `${incompleteCount} 项待办`
-      : "休息中";
+    : "龚博后好棒！";
 
   const closePet = async () => {
-    playOnce("sleep");
+    setMenuPosition(null);
+    if (overrideTimerRef.current !== null) {
+      window.clearTimeout(overrideTimerRef.current);
+      overrideTimerRef.current = null;
+    }
+
+    setActionOverride("sleep");
+    setActionFrame(0);
     await new Promise((resolve) => {
-      window.setTimeout(resolve, PET_ACTIONS.sleep.frames.length * PET_ACTIONS.sleep.intervalMs);
+      window.setTimeout(resolve, CLOSE_SLEEP_DURATION_MS);
     });
 
     try {
@@ -176,6 +202,38 @@ export function PetWindow() {
     }
   };
 
+  const openTodoWindow = async () => {
+    setMenuPosition(null);
+    try {
+      const mainWindow = (await getAllWindows()).find(
+        (window) => window.label === "main",
+      );
+      if (!mainWindow) return;
+      await mainWindow.show();
+      await mainWindow.unminimize();
+      await mainWindow.setFocus();
+    } catch (error) {
+      console.error("Failed to open TODO window", error);
+    }
+  };
+
+  const petPet = () => {
+    setMenuPosition(null);
+    playTemporary("love");
+  };
+
+  const openContextMenu = (event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const menuWidth = 116;
+    const menuHeight = 112;
+    const x = Math.min(event.clientX, window.innerWidth - menuWidth - 8);
+    const y = Math.min(event.clientY, window.innerHeight - menuHeight - 8);
+    setMenuPosition({
+      x: Math.max(8, x),
+      y: Math.max(8, y),
+    });
+  };
+
   useEffect(() => {
     setActionFrame(0);
     const interval = window.setInterval(() => {
@@ -184,18 +242,19 @@ export function PetWindow() {
     return () => window.clearInterval(interval);
   }, [actionConfig.intervalMs, currentAction]);
 
-  return (
-    <div className={`pet-window pet-window-${currentAction}`} data-tauri-drag-region>
-      <button
-        type="button"
-        className="pet-close"
-        aria-label="关闭蜜蜂桌宠"
-        title="关闭"
-        onClick={() => void closePet()}
-      >
-        <X size={13} />
-      </button>
+  useEffect(() => {
+    const hideMenu = () => setMenuPosition(null);
+    window.addEventListener("blur", hideMenu);
+    return () => window.removeEventListener("blur", hideMenu);
+  }, []);
 
+  return (
+    <div
+      className={`pet-window pet-window-${currentAction}`}
+      data-tauri-drag-region
+      onClick={() => setMenuPosition(null)}
+      onContextMenu={openContextMenu}
+    >
       <div
         className="pet-stage"
         aria-live="polite"
@@ -206,13 +265,30 @@ export function PetWindow() {
 
       <div className="pet-bubble">
         <span className="pet-status">
-          {currentAction === "celebrate"
-            ? "完成啦"
-            : currentAction === "sleep"
-              ? "晚安"
-              : statusText}
+          {statusText}
         </span>
       </div>
+
+      {menuPosition && (
+        <div
+          className="pet-menu"
+          style={{ left: menuPosition.x, top: menuPosition.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button type="button" onClick={() => void closePet()}>
+            <Power size={13} />
+            <span>关闭宠物</span>
+          </button>
+          <button type="button" onClick={petPet}>
+            <Heart size={13} />
+            <span>爱抚宠物</span>
+          </button>
+          <button type="button" onClick={() => void openTodoWindow()}>
+            <ListTodo size={13} />
+            <span>打开TODO</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

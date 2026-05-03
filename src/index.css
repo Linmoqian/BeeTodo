@@ -313,6 +313,10 @@ html.pet-view body {
   animation: pet-celebrate-hop 680ms ease-in-out infinite;
 }
 
+.pet-window-love .pet-stage {
+  animation: pet-love-bounce 860ms ease-in-out infinite;
+}
+
 .pet-bee {
   width: 126px;
   height: 126px;
@@ -327,6 +331,10 @@ html.pet-view body {
 
 .pet-window-celebrate .pet-bee {
   filter: drop-shadow(0 16px 24px color-mix(in oklch, var(--primary) 50%, transparent));
+}
+
+.pet-window-love .pet-bee {
+  filter: drop-shadow(0 16px 24px rgb(244 114 182 / 42%));
 }
 
 .pet-window-sleep .pet-bee {
@@ -371,25 +379,40 @@ html.pet-view body {
   white-space: nowrap;
 }
 
-.pet-close {
+.pet-menu {
   position: absolute;
-  right: 12px;
-  top: 10px;
-  z-index: 2;
+  z-index: 3;
   display: flex;
-  width: 22px;
-  height: 22px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  color: rgb(255 255 255 / 70%);
-  background: rgb(0 0 0 / 24%);
-  transition: color 160ms ease, background 160ms ease;
+  width: 108px;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid color-mix(in oklch, var(--border) 68%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--background) 78%, transparent);
+  padding: 5px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 24%);
+  backdrop-filter: blur(14px);
+  app-region: no-drag;
 }
 
-.pet-close:hover {
-  color: white;
-  background: rgb(0 0 0 / 42%);
+.pet-menu button {
+  display: flex;
+  height: 28px;
+  align-items: center;
+  gap: 7px;
+  border-radius: 6px;
+  padding: 0 8px;
+  color: var(--foreground);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: left;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.pet-menu button:hover {
+  color: var(--primary-foreground);
+  background: var(--primary);
 }
 
 @keyframes pet-idle-float {
@@ -419,6 +442,18 @@ html.pet-view body {
   }
   70% {
     transform: translateY(-5px) rotate(4deg);
+  }
+}
+
+@keyframes pet-love-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  45% {
+    transform: translateY(-7px) rotate(-2deg) scale(1.03);
+  }
+  70% {
+    transform: translateY(-2px) rotate(2deg) scale(1.01);
   }
 }
 
