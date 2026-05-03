@@ -286,9 +286,21 @@
   transform-origin: 50% 85%;
 }
 
+.pet-window-idle .pet-stage {
+  animation: pet-idle-float 2.8s ease-in-out infinite;
+}
+
+.pet-window-focus .pet-stage {
+  animation: pet-focus-hover 520ms ease-in-out infinite;
+}
+
+.pet-window-celebrate .pet-stage {
+  animation: pet-celebrate-hop 680ms ease-in-out infinite;
+}
+
 .pet-bee {
-  width: 118px;
-  height: 118px;
+  width: 126px;
+  height: 126px;
   object-fit: contain;
   filter: drop-shadow(0 12px 18px rgb(0 0 0 / 28%));
   pointer-events: none;
@@ -359,4 +371,34 @@
 .pet-close:hover {
   color: white;
   background: rgb(0 0 0 / 42%);
+}
+
+@keyframes pet-idle-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pet-focus-hover {
+  0%, 100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(1deg);
+  }
+}
+
+@keyframes pet-celebrate-hop {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  45% {
+    transform: translateY(-13px) rotate(-5deg);
+  }
+  70% {
+    transform: translateY(-5px) rotate(4deg);
+  }
 }

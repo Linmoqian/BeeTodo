@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { motion } from "motion/react";
 import { X } from "lucide-react";
 import type { StoredTodo } from "../types";
 
@@ -12,6 +11,29 @@ interface AppSettings {
 }
 
 type PetMood = "idle" | "focus" | "celebrate";
+
+const PET_ACTIONS: Record<PetMood, string[]> = {
+  idle: [
+    "/pet-actions/idle-heart.png",
+    "/pet-actions/idle-smile.png",
+    "/pet-actions/idle-heart.png",
+    "/pet-actions/idle-wink.png",
+  ],
+  focus: [
+    "/pet-actions/focus-wing-up.png",
+    "/pet-actions/focus-wing-down.png",
+  ],
+  celebrate: [
+    "/pet-actions/celebrate-hearts.png",
+    "/pet-actions/celebrate-many-hearts.png",
+  ],
+};
+
+const PET_ACTION_INTERVALS: Record<PetMood, number> = {
+  idle: 900,
+  focus: 260,
+  celebrate: 340,
+};
 
 function getLiveMs(todo: StoredTodo, now: number) {
   return todo.timerStartedAt
@@ -30,6 +52,7 @@ export function PetWindow() {
   const [todos, setTodos] = useState<StoredTodo[]>([]);
   const [now, setNow] = useState(Date.now());
   const [celebrating, setCelebrating] = useState(false);
+  const [actionFrame, setActionFrame] = useState(0);
   const completedCountRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -70,6 +93,8 @@ export function PetWindow() {
   );
   const incompleteCount = todos.filter((todo) => !todo.completed).length;
   const mood: PetMood = celebrating ? "celebrate" : activeTodo ? "focus" : "idle";
+  const actionFrames = PET_ACTIONS[mood];
+  const petImage = actionFrames[actionFrame % actionFrames.length];
   const statusText = activeTodo
     ? formatPetTime(getLiveMs(activeTodo, now))
     : incompleteCount > 0
@@ -86,6 +111,14 @@ export function PetWindow() {
     }
   };
 
+  useEffect(() => {
+    setActionFrame(0);
+    const interval = window.setInterval(() => {
+      setActionFrame((frame) => frame + 1);
+    }, PET_ACTION_INTERVALS[mood]);
+    return () => window.clearInterval(interval);
+  }, [mood]);
+
   return (
     <div className={`pet-window pet-window-${mood}`} data-tauri-drag-region>
       <button
@@ -98,24 +131,13 @@ export function PetWindow() {
         <X size={13} />
       </button>
 
-      <motion.div
+      <div
         className="pet-stage"
-        animate={
-          mood === "focus"
-            ? { y: [0, -7, 0], rotate: [-2, 2, -2] }
-            : mood === "celebrate"
-              ? { y: [0, -14, 0, -8, 0], rotate: [0, -8, 8, -4, 0] }
-              : { y: [0, -5, 0], rotate: [-1, 1, -1] }
-        }
-        transition={{
-          duration: mood === "celebrate" ? 0.8 : 2.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        aria-live="polite"
       >
-        <img className="pet-bee" src="/bee.png" alt="蜜蜂桌宠" />
+        <img className="pet-bee" src={petImage} alt="蜜蜂桌宠" />
         <span className="pet-shadow" />
-      </motion.div>
+      </div>
 
       <div className="pet-bubble">
         <span className="pet-status">
