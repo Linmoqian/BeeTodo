@@ -8,14 +8,18 @@ interface AppSettings {
   alwaysOnTop: boolean;
   compactOpacity: number;
   petEnabled: boolean;
+  userName: string;
+  petName: string;
 }
 
-export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: number) => void }) {
+export function ThemeSettings({ onOpacityChange, onSettingsChange }: { onOpacityChange?: (v: number) => void; onSettingsChange?: (s: AppSettings) => void }) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [alwaysOnTop, setAlwaysOnTop] = useState(false);
   const [compactOpacity, setCompactOpacity] = useState(60);
   const [petEnabled, setPetEnabled] = useState(false);
+  const [userName, setUserName] = useState("龚博后");
+  const [petName, setPetName] = useState("小蜜蜂");
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -25,6 +29,9 @@ export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: numbe
         setAlwaysOnTop(settings.alwaysOnTop);
         setCompactOpacity(settings.compactOpacity);
         setPetEnabled(settings.petEnabled);
+        setUserName(settings.userName);
+        setPetName(settings.petName);
+        onSettingsChange?.(settings);
       })
       .catch((error) => {
         console.error("Failed to load settings", error);
@@ -118,6 +125,52 @@ export function ThemeSettings({ onOpacityChange }: { onOpacityChange?: (v: numbe
                 )}
               </button>
             ))}
+          </div>
+
+          <div className="my-3 h-px bg-[var(--settings-border)]/80" />
+
+          <p className="mb-2.5 text-[11px] font-medium uppercase tracking-widest text-[var(--settings-label)]">
+            个性化
+          </p>
+          <div className="flex flex-col gap-2 px-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--settings-text)] text-sm shrink-0">用户名</span>
+              <input
+                type="text"
+                value={userName}
+                maxLength={10}
+                onChange={async (e) => {
+                  const v = e.target.value;
+                  setUserName(v);
+                  try {
+                    const settings = await invoke<AppSettings>("set_user_name", { name: v });
+                    onSettingsChange?.(settings);
+                  } catch (error) {
+                    console.error("Failed to set user name", error);
+                  }
+                }}
+                className="ml-auto w-24 rounded-md border border-[var(--settings-border)] bg-transparent px-2 py-1 text-sm text-[var(--settings-text)] outline-none focus:border-primary"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--settings-text)] text-sm shrink-0">宠物名</span>
+              <input
+                type="text"
+                value={petName}
+                maxLength={10}
+                onChange={async (e) => {
+                  const v = e.target.value;
+                  setPetName(v);
+                  try {
+                    const settings = await invoke<AppSettings>("set_pet_name", { name: v });
+                    onSettingsChange?.(settings);
+                  } catch (error) {
+                    console.error("Failed to set pet name", error);
+                  }
+                }}
+                className="ml-auto w-24 rounded-md border border-[var(--settings-border)] bg-transparent px-2 py-1 text-sm text-[var(--settings-text)] outline-none focus:border-primary"
+              />
+            </div>
           </div>
 
           <div className="my-3 h-px bg-[var(--settings-border)]/80" />
