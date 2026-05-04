@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
@@ -20,8 +21,6 @@ jobs:
             args: --target x86_64-apple-darwin
           - platform: windows-latest
             args: ""
-          - platform: ubuntu-22.04
-            args: ""
 
     runs-on: ${{ matrix.platform }}
 
@@ -32,12 +31,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-
-      - name: install dependencies (Ubuntu)
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - uses: actions/setup-node@v4
         with:
@@ -50,9 +43,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__
-          releaseName: 'BeeTODO v__VERSION__'
-          releaseBody: 'See the assets to download and install this version.'
+          tagName: ${{ github.ref_name }}
+          releaseName: 'BeeTODO ${{ github.ref_name }}'
+          releaseBody: |
+            BeeTODO 桌面版发布，包含以下核心功能：
+
+            1. TODO 列表：创建、完成和管理待办事项。
+            2. 主题切换：支持应用主题切换，适配不同使用偏好。
+            3. 蜜蜂桌面宠物：独立显示与交互的桌宠体验。
+
+            支持平台：Windows 11、macOS（Apple Silicon 与 Intel）。
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
