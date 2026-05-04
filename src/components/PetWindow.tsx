@@ -9,6 +9,8 @@ interface AppSettings {
   alwaysOnTop: boolean;
   compactOpacity: number;
   petEnabled: boolean;
+  userName: string;
+  petName: string;
 }
 
 type PetAction = "idle" | "focus" | "pause" | "celebrate" | "sleep" | "love";
@@ -107,6 +109,8 @@ export function PetWindow() {
     x: number;
     y: number;
   } | null>(null);
+  const [userName, setUserName] = useState("龚博后");
+  const [petName, setPetName] = useState("小蜜蜂");
   const completedCountRef = useRef<number | null>(null);
   const overrideTimerRef = useRef<number | null>(null);
 
@@ -131,8 +135,13 @@ export function PetWindow() {
 
     const loadTodos = async () => {
       try {
-        const nextTodos = await invoke<StoredTodo[]>("list_todos");
+        const [nextTodos, settings] = await Promise.all([
+          invoke<StoredTodo[]>("list_todos"),
+          invoke<AppSettings>("get_settings"),
+        ]);
         if (!mounted) return;
+        setUserName(settings.userName);
+        setPetName(settings.petName);
 
         const completedCount = nextTodos.filter((todo) => todo.completed).length;
         if (
@@ -178,7 +187,7 @@ export function PetWindow() {
   const petImage = actionConfig.frames[frameIndex];
   const statusText = activeTodo
     ? formatPetTime(getLiveMs(activeTodo, now))
-    : "龚博后好棒！";
+    : `${userName}好棒！`;
 
   const closePet = async () => {
     setMenuPosition(null);
@@ -274,7 +283,7 @@ export function PetWindow() {
         aria-live="polite"
         onMouseDown={startPetDrag}
       >
-        <img className="pet-bee" src={petImage} alt="蜜蜂桌宠" />
+        <img className="pet-bee" src={petImage} alt={petName} />
         <span className="pet-shadow" />
       </div>
 
@@ -296,11 +305,11 @@ export function PetWindow() {
         >
           <button type="button" onClick={() => void closePet()}>
             <Power size={13} />
-            <span>关闭宠物</span>
+            <span>关闭{petName}</span>
           </button>
           <button type="button" onClick={petPet}>
             <Heart size={13} />
-            <span>爱抚宠物</span>
+            <span>爱抚{petName}</span>
           </button>
           <button type="button" onClick={() => void openTodoWindow()}>
             <ListTodo size={13} />

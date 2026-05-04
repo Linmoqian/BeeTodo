@@ -32,11 +32,13 @@ function App() {
   const normalWindowSizeRef = useRef<PhysicalSize | null>(null);
   const [compactMode, setCompactMode] = useState(false);
   const [compactOpacity, setCompactOpacity] = useState(60);
+  const [userName, setUserName] = useState("龚博后");
 
   useEffect(() => {
-    invoke<{ compactOpacity: number; petEnabled: boolean }>("get_settings")
+    invoke<{ compactOpacity: number; petEnabled: boolean; userName: string }>("get_settings")
       .then((s) => {
         setCompactOpacity(s.compactOpacity);
+        setUserName(s.userName);
         if (s.petEnabled) {
           void openPetWindow();
         }
@@ -145,13 +147,13 @@ function App() {
         {/* Header */}
         <header className="mb-8 flex items-center justify-between px-2">
           <div className="flex items-center gap-2.5">
-            <ThemeSettings onOpacityChange={setCompactOpacity} />
+            <ThemeSettings onOpacityChange={setCompactOpacity} onSettingsChange={(s) => setUserName(s.userName)} />
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Timer size={16} className="text-primary" />
             </div>
             <div>
               <h1 className="text-lg flex items-center gap-2 font-semibold tracking-tight text-foreground">
-                龚博后专用
+                {userName}专用
               </h1>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 BeeTODO
