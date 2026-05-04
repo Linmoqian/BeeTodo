@@ -58,6 +58,6 @@ jobs:
             3. 蜜蜂桌面宠物：独立显示与交互的桌宠体验。
 
             支持平台：Windows 11、macOS（Apple Silicon 与 Intel）。
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
