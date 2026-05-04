@@ -31,6 +31,8 @@ Thumbs.db
 
 # Claude Code
 .claude/
+CLAUDE.md
+AGENTS.md
 
 # Tauri
 src-tauri/target/
