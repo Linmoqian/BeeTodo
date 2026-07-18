@@ -1,8 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { StoredTodo } from "../types";
+import type { StoredTodo, StudyNote } from "../types";
 
 const TODO_STORAGE_KEY = "beetodo-todos";
 const SETTINGS_STORAGE_KEY = "beetodo-settings";
+const NOTES_STORAGE_KEY = "beetodo-study-notes";
 
 export interface AppSettings {
   alwaysOnTop: boolean;
@@ -40,6 +41,15 @@ export function readLocalTodos(): StoredTodo[] {
 export function writeLocalTodos(todos: StoredTodo[]): StoredTodo[] {
   localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
   return todos;
+}
+
+export function readLocalNotes(): StudyNote[] {
+  return readJson<StudyNote[]>(NOTES_STORAGE_KEY, []);
+}
+
+export function writeLocalNotes(notes: StudyNote[]): StudyNote[] {
+  localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+  return notes;
 }
 
 export async function getRuntimeTodos(): Promise<StoredTodo[]> {

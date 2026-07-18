@@ -12,6 +12,11 @@ const GuidePage = lazy(async () => {
   return { default: module.GuidePage };
 });
 
+const NotesPage = lazy(async () => {
+  const module = await import("./pages/NotesPage");
+  return { default: module.NotesPage };
+});
+
 function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const todos = useTodos();
@@ -59,6 +64,14 @@ function App() {
                 setTodoColor={todos.setTodoColor}
                 pinTodoTop={todos.pinTodoTop}
               />
+            }
+          />
+          <Route
+            path="/notes"
+            element={
+              <Suspense fallback={<div className="route-loading">正在载入学习便签…</div>}>
+                <NotesPage />
+              </Suspense>
             }
           />
           <Route

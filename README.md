@@ -15,8 +15,11 @@ Web 模式使用同源 `localStorage` 同步任务、计时和设置，不依赖
 ## 核心功能
 
 1. TODO 列表：创建、勾选与管理待办事项。
-2. 主题切换：支持主题偏好切换。
-3. 蜜蜂桌面宠物：可独立显示与交互的桌宠窗口。
+2. 学习便签：支持 Markdown 编辑、预览、检索及 `.md` 导入导出。
+3. 主题切换：支持主题偏好切换。
+4. 蜜蜂桌面宠物：可独立显示与交互的桌宠窗口。
+
+学习便签位于 `#/notes`。Web 开发阶段使用 `localStorage` 自动保存，桌面端后续可在不改动页面组件的前提下替换持久化适配器。便签交互参考了 MIT 许可的 [Floral Notepaper](https://github.com/Achilng/floral-notepaper)，许可说明见 `THIRD_PARTY_NOTICES.md`。
 
 - 宠物和透明窗口：
 ![宠物](assets/images/image.png)
