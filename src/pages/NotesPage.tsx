@@ -72,19 +72,17 @@ export function NotesPage() {
 
   return (
     <section className="page notes-page">
-      <header className="page-header compact notes-header">
-        <div>
-          <span className="eyebrow">Knowledge notes</span>
-          <h1>学习便签</h1>
-          <p>把任务旁的碎片想法，沉淀为可检索的 Markdown 笔记。</p>
-        </div>
-        <button className="primary-action" type="button" onClick={handleAdd}>
-          <Plus size={16} /> 新建笔记
-        </button>
-      </header>
-
       <div className="notes-workspace">
         <aside className="notes-library" aria-label="笔记列表">
+          <header className="notes-library-header">
+            <div>
+              <span>学习空间</span>
+              <strong>学习便签</strong>
+            </div>
+            <button type="button" aria-label="新建笔记" title="新建笔记" onClick={handleAdd}>
+              <Plus size={16} />
+            </button>
+          </header>
           <label className="notes-search">
             <Search size={15} />
             <span className="sr-only">搜索笔记</span>
