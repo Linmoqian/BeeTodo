@@ -340,6 +340,18 @@ a:focus-visible {
   background: var(--surface);
   box-shadow: 0 5px 18px rgb(0 0 0 / 4%);
   backdrop-filter: blur(20px);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.focus-time:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  box-shadow: 0 9px 24px rgb(0 0 0 / 7%);
+  transform: translateY(-2px);
 }
 
 .focus-time > svg {
@@ -362,6 +374,11 @@ a:focus-visible {
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.focus-entry-icon {
+  margin-left: 2px;
+  color: var(--faint);
 }
 
 .task-composer {

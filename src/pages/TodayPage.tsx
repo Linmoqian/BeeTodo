@@ -1,7 +1,8 @@
 import { motion } from "motion/react";
-import { Clock3, Sparkles } from "lucide-react";
+import { Clock3, Maximize2, Sparkles } from "lucide-react";
 import { TodoInput } from "../components/TodoInput";
 import { TodoList } from "../components/TodoList";
+import { openFocusWindow } from "../lib/focusWindow";
 import type { Todo, TodoColor } from "../types";
 
 function formatTotalTime(ms: number): string {
@@ -55,13 +56,20 @@ export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPagePro
           <h1>{userName}，今天想完成什么？</h1>
           <p>一次专注一件事，其余交给 BeeTodo。</p>
         </div>
-        <div className="focus-time" aria-label={`累计专注 ${formatTotalTime(totalMs)}`}>
+        <button
+          type="button"
+          className="focus-time"
+          aria-label={`进入专注模式，累计专注 ${formatTotalTime(totalMs)}`}
+          title="进入专注模式"
+          onClick={() => void openFocusWindow()}
+        >
           <Clock3 size={17} />
           <div>
-            <span>累计专注</span>
+            <span>累计专注 · 进入模式</span>
             <strong>{formatTotalTime(totalMs)}</strong>
           </div>
-        </div>
+          <Maximize2 className="focus-entry-icon" size={13} />
+        </button>
       </header>
 
       <TodoInput onAdd={actions.addTodo} />

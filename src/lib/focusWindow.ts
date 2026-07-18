@@ -3,6 +3,14 @@ import { isTauriRuntime } from "./platform";
 
 const FOCUS_WINDOW_LABEL = "focus";
 
+function loadWebRoute(route: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("view");
+  url.hash = route;
+  window.location.replace(url);
+  window.location.reload();
+}
+
 async function getWindow(label: string) {
   return (await getAllWebviewWindows()).find((window) => window.label === label);
 }
@@ -23,7 +31,7 @@ export async function restoreMainWindow() {
 
 export async function exitFocusMode() {
   if (!isTauriRuntime()) {
-    window.location.hash = "/";
+    loadWebRoute("/");
     return;
   }
 
@@ -32,7 +40,10 @@ export async function exitFocusMode() {
 }
 
 export async function openFocusWindow() {
-  if (!isTauriRuntime()) return;
+  if (!isTauriRuntime()) {
+    loadWebRoute("/focus");
+    return;
+  }
   const existing = await getWindow(FOCUS_WINDOW_LABEL);
   if (existing) {
     await existing.show();
