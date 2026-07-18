@@ -1,0 +1,84 @@
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "motion/react";
+import { Pause, TimerReset } from "lucide-react";
+import {
+  DEFAULT_SETTINGS,
+  getAppSettings,
+  getRuntimeTodos,
+  pauseRuntimeTimer,
+  type AppSettings,
+} from "../lib/platform";
+import type { StoredTodo } from "../types";
+
+function formatFocusTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds]
+    .map((value) => String(value).padStart(2, "0"))
+    .join(":");
+}
+
+export function FocusWindow() {
+  const [todos, setTodos] = useState<StoredTodo[]>([]);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    let mounted = true;
+    const refresh = async () => {
+      const [nextTodos, nextSettings] = await Promise.all([
+        getRuntimeTodos(),
+        getAppSettings(),
+      ]);
+      if (!mounted) return;
+      setTodos(nextTodos);
+      setSettings(nextSettings);
+      setNow(Date.now());
+    };
+
+    void refresh();
+    const interval = window.setInterval(() => void refresh(), 500);
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  const activeTodo = useMemo(
+    () => todos.find((todo) => todo.timerStartedAt !== null) ?? null,
+    [todos],
+  );
+  const liveMs = activeTodo?.timerStartedAt
+    ? activeTodo.elapsedMs + now - activeTodo.timerStartedAt
+    : activeTodo?.elapsedMs ?? 0;
+
+  return (
+    <motion.main
+      className="focus-window"
+      style={{
+        background: `color-mix(in srgb, var(--surface-solid) ${settings.compactOpacity}%, transparent)`,
+      }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      data-tauri-drag-region
+    >
+      <div className="focus-window-icon">
+        <TimerReset size={17} />
+      </div>
+      <div className="focus-window-copy">
+        <span>{activeTodo?.text ?? "尚未开始专注"}</span>
+        <strong>{formatFocusTime(liveMs)}</strong>
+      </div>
+      <button
+        type="button"
+        aria-label="暂停当前专注"
+        disabled={!activeTodo}
+        onClick={() => activeTodo && void pauseRuntimeTimer(activeTodo.id)}
+      >
+        <Pause size={15} fill="currentColor" />
+      </button>
+    </motion.main>
+  );
+}

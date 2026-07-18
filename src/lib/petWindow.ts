@@ -44,7 +44,7 @@ export async function openPetWindow() {
   }
 
   const petWindow = new WebviewWindow(PET_WINDOW_LABEL, {
-    url: "index.html?view=pet",
+    url: "index.html#/pet",
     title: "蜜蜂桌宠",
     width: PET_WINDOW_WIDTH,
     height: PET_WINDOW_HEIGHT,

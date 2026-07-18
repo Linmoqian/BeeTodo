@@ -27,6 +27,13 @@ export function useTodos() {
       .catch((error) => console.error("Failed to load todos", error));
   }, []);
 
+  useEffect(() => {
+    if (isTauriRuntime()) return;
+    const syncTodos = () => setTodos(readLocalTodos());
+    window.addEventListener("storage", syncTodos);
+    return () => window.removeEventListener("storage", syncTodos);
+  }, []);
+
   const updateLocal = useCallback((updater: TodoUpdater) => {
     setTodos((current) => writeLocalTodos(updater(current)));
   }, []);

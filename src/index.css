@@ -791,6 +791,32 @@ a:focus-visible {
   background: transparent;
 }
 
+.action-row,
+.preview-actions button {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 11px;
+  padding: 0 11px;
+  color: var(--foreground);
+  background: var(--surface-muted);
+  font-size: 13px;
+}
+
+.action-row:hover,
+.preview-actions button:hover {
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--accent-soft));
+}
+
+.preview-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .switch {
   position: relative;
   width: 38px;
@@ -993,14 +1019,116 @@ a:focus-visible {
   }
 }
 
-html.pet-view,
-html.pet-view body,
-html.pet-view #root {
+html.widget-view,
+html.widget-view body,
+html.widget-view #root {
+  width: 100%;
+  height: 100%;
+}
+
+html.desktop-widget,
+html.desktop-widget body,
+html.desktop-widget #root {
   background: transparent !important;
 }
 
-html.pet-view body {
+html.widget-view body {
   overflow: hidden;
+}
+
+html.web-widget-preview body {
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(45deg, rgb(0 0 0 / 3%) 25%, transparent 25%),
+    linear-gradient(-45deg, rgb(0 0 0 / 3%) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgb(0 0 0 / 3%) 75%),
+    linear-gradient(-45deg, transparent 75%, rgb(0 0 0 / 3%) 75%),
+    #e9eaed;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-size: 16px 16px;
+}
+
+html.web-widget-preview #root {
+  display: grid;
+  place-items: center;
+}
+
+.focus-window {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 42px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  border-radius: 22px;
+  padding: 14px 16px;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 16%);
+  backdrop-filter: blur(24px) saturate(150%);
+  user-select: none;
+}
+
+.web-widget-preview .focus-window {
+  width: min(420px, calc(100vw - 32px));
+  height: 112px;
+}
+
+.focus-window-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 13px;
+  color: #3b2c00;
+  background: linear-gradient(145deg, #ffd866, #ffb800);
+}
+
+.focus-window-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.focus-window-copy span {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-window-copy strong {
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-size: 24px;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
+.focus-window > button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.focus-window > button:disabled {
+  color: var(--faint);
+  cursor: default;
+  background: var(--surface-muted);
+}
+
+[data-tauri-drag-region] {
+  app-region: drag;
+}
+
+[data-tauri-drag-region] button {
+  app-region: no-drag;
 }
 
 .pet-window {
@@ -1010,6 +1138,11 @@ html.pet-view body {
   overflow: hidden;
   background: transparent;
   user-select: none;
+}
+
+.web-widget-preview .pet-window {
+  width: 180px;
+  height: 170px;
 }
 
 .pet-stage {

@@ -42,6 +42,31 @@ export function writeLocalTodos(todos: StoredTodo[]): StoredTodo[] {
   return todos;
 }
 
+export async function getRuntimeTodos(): Promise<StoredTodo[]> {
+  if (isTauriRuntime()) {
+    return invoke<StoredTodo[]>("list_todos");
+  }
+  return readLocalTodos();
+}
+
+export async function pauseRuntimeTimer(id: string): Promise<StoredTodo[]> {
+  if (isTauriRuntime()) {
+    return invoke<StoredTodo[]>("pause_timer", { id });
+  }
+  const now = Date.now();
+  return writeLocalTodos(
+    readLocalTodos().map((todo) =>
+      todo.id === id && todo.timerStartedAt
+        ? {
+            ...todo,
+            elapsedMs: todo.elapsedMs + now - todo.timerStartedAt,
+            timerStartedAt: null,
+          }
+        : todo,
+    ),
+  );
+}
+
 export async function getAppSettings(): Promise<AppSettings> {
   if (isTauriRuntime()) {
     return invoke<AppSettings>("get_settings");

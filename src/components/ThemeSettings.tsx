@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Monitor, Palette, Settings, UserRound, X } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  Monitor,
+  Palette,
+  Settings,
+  TimerReset,
+  UserRound,
+  X,
+} from "lucide-react";
 import { THEMES, useTheme } from "../hooks/useTheme";
 import {
   DEFAULT_SETTINGS,
@@ -11,6 +20,7 @@ import {
   type AppSettings,
 } from "../lib/platform";
 import { closePetWindow, openPetWindow } from "../lib/petWindow";
+import { openFocusWindow } from "../lib/focusWindow";
 
 interface ThemeSettingsProps {
   onOpacityChange?: (value: number) => void;
@@ -48,6 +58,20 @@ export function ThemeSettings({
     await (enabled ? openPetWindow() : closePetWindow());
   };
 
+  const openWidgetPreview = (view: "focus" | "pet") => {
+    if (isTauriRuntime()) {
+      void (view === "focus" ? openFocusWindow() : openPetWindow());
+      return;
+    }
+    const dimensions =
+      view === "focus" ? "width=520,height=260" : "width=360,height=360";
+    window.open(
+      `${window.location.origin}${window.location.pathname}#/${view}`,
+      `beetodo-${view}`,
+      `popup,${dimensions}`,
+    );
+  };
+
   return (
     <>
       <button className="icon-button" onClick={() => setOpen(true)} aria-label="设置">
@@ -57,24 +81,24 @@ export function ThemeSettings({
       {createPortal(
         <AnimatePresence>
           {open && (
-          <motion.div
-            className="modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setOpen(false)}
-          >
-            <motion.section
-              className="settings-sheet"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="settings-title"
-              initial={{ opacity: 0, y: 18, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 12, scale: 0.98 }}
-              onClick={(event) => event.stopPropagation()}
+            <motion.div
+              className="modal-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
             >
-              <header>
+              <motion.section
+                className="settings-sheet"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="settings-title"
+                initial={{ opacity: 0, y: 18, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <header>
                 <div>
                   <span className="eyebrow">偏好设置</span>
                   <h2 id="settings-title">让 BeeTodo 更适合你</h2>
@@ -82,7 +106,7 @@ export function ThemeSettings({
                 <button className="icon-button" onClick={() => setOpen(false)} aria-label="关闭设置">
                   <X size={17} />
                 </button>
-              </header>
+                </header>
 
               <div className="settings-group">
                 <div className="settings-label">
@@ -136,6 +160,10 @@ export function ThemeSettings({
                 </div>
                 {isTauriRuntime() ? (
                   <>
+                    <button className="action-row" onClick={() => openWidgetPreview("focus")}>
+                      <span>打开专注磁贴</span>
+                      <TimerReset size={15} />
+                    </button>
                     <button
                       className="switch-row"
                       onClick={() =>
@@ -153,34 +181,43 @@ export function ThemeSettings({
                       <span>蜜蜂桌宠</span>
                       <span className={`switch ${settings.petEnabled ? "is-on" : ""}`} />
                     </button>
-                    <label className="range-row">
-                      <span>小窗透明度</span>
-                      <input
-                        type="range"
-                        min="20"
-                        max="100"
-                        value={settings.compactOpacity}
-                        onChange={(event) => {
-                          const compactOpacity = Number(event.target.value);
-                          setSettings((current) => ({ ...current, compactOpacity }));
-                          onOpacityChange?.(compactOpacity);
-                        }}
-                        onMouseUp={() =>
-                          void save(
-                            "set_compact_opacity",
-                            { opacity: settings.compactOpacity },
-                            { compactOpacity: settings.compactOpacity },
-                          )
-                        }
-                      />
-                    </label>
                   </>
                 ) : (
-                  <p className="settings-note">桌面能力将在 Tauri 集成阶段启用，当前专注 Web 体验。</p>
+                  <div className="preview-actions">
+                    <button onClick={() => openWidgetPreview("focus")}>
+                      <span>预览专注磁贴</span>
+                      <ExternalLink size={14} />
+                    </button>
+                    <button onClick={() => openWidgetPreview("pet")}>
+                      <span>预览桌宠</span>
+                      <ExternalLink size={14} />
+                    </button>
+                  </div>
                 )}
+                <label className="range-row">
+                  <span>磁贴透明度</span>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    value={settings.compactOpacity}
+                    onChange={(event) => {
+                      const compactOpacity = Number(event.target.value);
+                      setSettings((current) => ({ ...current, compactOpacity }));
+                      onOpacityChange?.(compactOpacity);
+                    }}
+                    onMouseUp={() =>
+                      void save(
+                        "set_compact_opacity",
+                        { opacity: settings.compactOpacity },
+                        { compactOpacity: settings.compactOpacity },
+                      )
+                    }
+                  />
+                </label>
               </div>
-            </motion.section>
-          </motion.div>
+              </motion.section>
+            </motion.div>
           )}
         </AnimatePresence>,
         document.body,

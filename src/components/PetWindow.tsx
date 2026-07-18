@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { Heart, ListTodo, Power } from "lucide-react";
+import {
+  getAppSettings,
+  getRuntimeTodos,
+  isTauriRuntime,
+  updateAppSettings,
+} from "../lib/platform";
 import type { StoredTodo } from "../types";
-
-interface AppSettings {
-  alwaysOnTop: boolean;
-  compactOpacity: number;
-  petEnabled: boolean;
-  userName: string;
-  petName: string;
-}
 
 type PetAction = "idle" | "focus" | "pause" | "celebrate" | "sleep" | "love";
 
@@ -29,7 +26,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/idle-03.png",
       "/pet-actions/idle-04.png",
     ],
-    intervalMs: 15000,
+    intervalMs: 900,
     loop: true,
   },
   focus: {
@@ -39,7 +36,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/focus-03.png",
       "/pet-actions/focus-04.png",
     ],
-    intervalMs: 15000,
+    intervalMs: 700,
     loop: true,
   },
   pause: {
@@ -49,7 +46,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/pause-03.png",
       "/pet-actions/pause-04.png",
     ],
-    intervalMs: 15000,
+    intervalMs: 1200,
     loop: true,
   },
   celebrate: {
@@ -59,7 +56,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/celebrate-03.png",
       "/pet-actions/celebrate-04.png",
     ],
-    intervalMs: 15000,
+    intervalMs: 420,
     loop: true,
   },
   sleep: {
@@ -69,7 +66,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/sleep-03.png",
       "/pet-actions/sleep-04.png",
     ],
-    intervalMs: 15000,
+    intervalMs: 900,
     loop: false,
   },
   love: {
@@ -79,7 +76,7 @@ const PET_ACTIONS: Record<PetAction, PetActionConfig> = {
       "/pet-actions/love-03.png",
       "/pet-actions/love-04.png",
     ],
-    intervalMs: 15000,
+    intervalMs: 650,
     loop: true,
   },
 };
@@ -109,7 +106,7 @@ export function PetWindow() {
     x: number;
     y: number;
   } | null>(null);
-  const [userName, setUserName] = useState("龚博后");
+  const [userName, setUserName] = useState("工程师");
   const [petName, setPetName] = useState("小蜜蜂");
   const completedCountRef = useRef<number | null>(null);
   const overrideTimerRef = useRef<number | null>(null);
@@ -136,8 +133,8 @@ export function PetWindow() {
     const loadTodos = async () => {
       try {
         const [nextTodos, settings] = await Promise.all([
-          invoke<StoredTodo[]>("list_todos"),
-          invoke<AppSettings>("get_settings"),
+          getRuntimeTodos(),
+          getAppSettings(),
         ]);
         if (!mounted) return;
         setUserName(settings.userName);
@@ -202,17 +199,21 @@ export function PetWindow() {
       window.setTimeout(resolve, CLOSE_SLEEP_DURATION_MS);
     });
 
-    try {
-      await invoke<AppSettings>("set_pet_enabled", { enabled: false });
-    } catch (error) {
-      console.error("Failed to persist pet window state", error);
-    } finally {
-      await getCurrentWindow().close();
-    }
+    if (!isTauriRuntime()) return;
+    await updateAppSettings(
+      "set_pet_enabled",
+      { enabled: false },
+      { petEnabled: false },
+    );
+    await getCurrentWindow().close();
   };
 
   const openTodoWindow = async () => {
     setMenuPosition(null);
+    if (!isTauriRuntime()) {
+      window.location.assign(`${window.location.origin}${window.location.pathname}#/`);
+      return;
+    }
     try {
       const mainWindow = (await getAllWindows()).find(
         (window) => window.label === "main",
@@ -232,7 +233,7 @@ export function PetWindow() {
   };
 
   const startPetDrag = (event: MouseEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || !isTauriRuntime()) return;
     void getCurrentWindow().startDragging();
   };
 
