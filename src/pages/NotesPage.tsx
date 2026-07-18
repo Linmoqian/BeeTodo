@@ -73,7 +73,12 @@ export function NotesPage() {
   };
 
   return (
-    <section className="page notes-page">
+    <motion.section
+      className="page notes-page"
+      initial={{ opacity: 0, scale: 0.995 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="notes-workspace">
         <aside className="notes-library" aria-label="笔记列表">
           <header className="notes-library-header">
@@ -198,6 +203,6 @@ export function NotesPage() {
           )}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

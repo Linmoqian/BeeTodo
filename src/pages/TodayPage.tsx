@@ -43,7 +43,12 @@ export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPagePro
   }).format(new Date());
 
   return (
-    <motion.div className="page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div
+      className="page"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+    >
       <header className="page-header">
         <div>
           <span className="eyebrow">{today}</span>

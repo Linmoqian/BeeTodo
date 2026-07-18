@@ -7,6 +7,7 @@ BeeTODO 是一个基于 Tauri v2 + React 18 + TypeScript 的桌面应用。
 运行 `npm run dev` 后可直接调试以下窗口入口：
 
 - 主窗口：`http://127.0.0.1:1420/#/`
+- 成就与赞助：`http://127.0.0.1:1420/#/achievements`
 - 专注磁贴：`http://127.0.0.1:1420/#/focus`
 - 桌宠窗口：`http://127.0.0.1:1420/#/pet`
 - 快捷便签：`http://127.0.0.1:1420/#/quick-note`
@@ -22,7 +23,10 @@ Web 模式使用同源 `localStorage` 同步任务、笔记、计时和设置，
 2. 学习便签：支持 Markdown 编辑、预览、检索及 `.md` 导入导出。
 3. 桌面便签：支持托盘/全局快捷键快速记录，并可将单篇笔记固定为置顶磁贴。
 4. 主题切换：支持主题偏好切换。
-5. 蜜蜂桌面宠物：可独立显示与交互的桌宠窗口。
+5. 成就系统：根据完成任务数、累计专注时间和便签数量自动记录进度。
+6. 蜜蜂桌面宠物：可独立显示与交互的桌宠窗口。
+
+赞助页面会读取 `public/wechat-qr.png` 作为微信二维码；未提供图片时显示缺图提示，不影响其他功能。
 
 学习便签位于 `#/notes`。Web 开发阶段使用 `localStorage` 自动保存，桌面端后续可在不改动页面组件的前提下替换持久化适配器。便签交互参考了 MIT 许可的 [Floral Notepaper](https://github.com/Achilng/floral-notepaper)，许可说明见 `THIRD_PARTY_NOTICES.md`。
 

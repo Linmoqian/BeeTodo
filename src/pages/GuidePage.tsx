@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm";
 const GUIDE = `
 # 使用指南
 
-BeeTodo 把任务管理和专注计时放在同一个安静的空间里。
+BeeTodo 把任务、专注计时、学习便签和成长记录放在同一个安静的空间里。
 
 ## 快速开始
 
@@ -18,8 +18,29 @@ BeeTodo 把任务管理和专注计时放在同一个安静的空间里。
 - 拖动左侧手柄可以调整顺序。
 - 在更多菜单中可以置顶、设置颜色或删除任务。
 - 「全部任务」支持按进行中和已完成筛选。
+- 双击任务名称可以直接修改。
 
-> Web 开发阶段的数据保存在当前浏览器中。接入 FastAPI 后会迁移到统一的数据服务。
+## 专注与桌面窗口
+
+- 同一时间只会运行一个任务计时器。
+- 在设置中打开「专注磁贴」，可只保留当前任务和计时。
+- 默认按 **Ctrl+Space** 打开快捷便签，也可以在设置中修改组合键。
+- 空白快捷便签按 **Esc** 关闭；按 **Ctrl/Cmd+Enter** 保存。
+- 主窗口关闭后会留在系统托盘，点击 Dock 图标或托盘可再次打开。
+
+## 学习便签
+
+1. 在侧边栏进入「学习便签」，点击加号新建笔记。
+2. 使用 Markdown 记录标题、清单、引用、代码和表格。
+3. 在「编辑 / 预览」间切换，内容会自动保存。
+4. 点击图钉可将当前笔记固定为桌面磁贴。
+5. 支持搜索，以及导入、导出 Markdown 文件。
+
+## 成就与支持
+
+「成就」会根据完成任务数、累计专注时间和学习便签数量自动解锁，不需要手动领取。页面底部提供微信赞助入口。
+
+> Web 模式的数据保存在当前浏览器的 localStorage；Tauri 桌面模式的任务和设置保存在本机应用数据目录。BeeTodo 不会主动上传学习内容。
 
 ## 快捷原则
 
@@ -28,11 +49,18 @@ BeeTodo 把任务管理和专注计时放在同一个安静的空间里。
 | 保持专注 | 同一时间只运行一个计时器 |
 | 减少负担 | 任务标题保持短小、可执行 |
 | 每日收尾 | 清理过期任务并回顾专注时间 |
+| 沉淀知识 | 把任务中的结论整理为学习便签 |
+| 保持轻量 | 只固定当前真正需要查看的桌面磁贴 |
 `;
 
 export function GuidePage() {
   return (
-    <motion.div className="page guide-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div
+      className="page guide-page"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+    >
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{GUIDE}</ReactMarkdown>
     </motion.div>
   );

@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from "react";
-import { BookOpenText, CalendarDays, CheckCircle2, ListTodo, NotebookPen } from "lucide-react";
+import { BookOpenText, CalendarDays, CheckCircle2, ListTodo, NotebookPen, Trophy } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ThemeSettings } from "./ThemeSettings";
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: "/", label: "今日", icon: CalendarDays, end: true },
   { to: "/tasks", label: "全部任务", icon: CheckCircle2, end: false },
   { to: "/notes", label: "学习便签", icon: NotebookPen, end: false },
+  { to: "/achievements", label: "成就", icon: Trophy, end: false },
   { to: "/guide", label: "使用指南", icon: BookOpenText, end: false },
 ];
 

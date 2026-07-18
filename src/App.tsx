@@ -17,6 +17,11 @@ const NotesPage = lazy(async () => {
   return { default: module.NotesPage };
 });
 
+const AchievementsPage = lazy(async () => {
+  const module = await import("./pages/AchievementsPage");
+  return { default: module.AchievementsPage };
+});
+
 function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const todos = useTodos();
@@ -71,6 +76,14 @@ function App() {
             element={
               <Suspense fallback={<div className="route-loading">正在载入学习便签…</div>}>
                 <NotesPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/achievements"
+            element={
+              <Suspense fallback={<div className="route-loading">正在载入成就…</div>}>
+                <AchievementsPage todos={todos.todos} totalMs={todos.totalMs} />
               </Suspense>
             }
           />
