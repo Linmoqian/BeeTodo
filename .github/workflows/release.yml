@@ -51,11 +51,12 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'BeeTODO ${{ github.ref_name }}'
           releaseBody: |
-            BeeTODO 桌面版发布，包含以下核心功能：
+            BeeTODO 0.2.0 正式版：
 
-            1. TODO 列表：创建、完成和管理待办事项。
-            2. 主题切换：支持应用主题切换，适配不同使用偏好。
-            3. 蜜蜂桌面宠物：独立显示与交互的桌宠体验。
+            1. 优化 UI，采用现代、极简主义设计。
+            2. 添加成就系统，记录任务、专注与学习进度。
+            3. 添加便签功能，支持 Markdown 学习笔记与桌面磁贴。
+            4. 修复待办重命名后名称无法稳定保存的问题。
 
             支持平台：Windows 11、macOS（Apple Silicon 与 Intel）。
           releaseDraft: false
