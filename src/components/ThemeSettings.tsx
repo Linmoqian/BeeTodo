@@ -7,6 +7,7 @@ import {
   Monitor,
   Palette,
   Settings,
+  StickyNote,
   TimerReset,
   UserRound,
   X,
@@ -21,6 +22,7 @@ import {
 } from "../lib/platform";
 import { closePetWindow, openPetWindow } from "../lib/petWindow";
 import { openFocusWindow } from "../lib/focusWindow";
+import { openQuickNoteWindow } from "../lib/noteWindows";
 
 interface ThemeSettingsProps {
   onOpacityChange?: (value: number) => void;
@@ -160,6 +162,10 @@ export function ThemeSettings({
                 </div>
                 {isTauriRuntime() ? (
                   <>
+                    <button className="action-row" onClick={() => void openQuickNoteWindow()}>
+                      <span>快捷便签 · Ctrl+Space</span>
+                      <StickyNote size={15} />
+                    </button>
                     <button className="action-row" onClick={() => openWidgetPreview("focus")}>
                       <span>打开专注磁贴</span>
                       <TimerReset size={15} />
@@ -184,6 +190,10 @@ export function ThemeSettings({
                   </>
                 ) : (
                   <div className="preview-actions">
+                    <button onClick={() => void openQuickNoteWindow()}>
+                      <span>预览快捷便签</span>
+                      <ExternalLink size={14} />
+                    </button>
                     <button onClick={() => openWidgetPreview("focus")}>
                       <span>预览专注磁贴</span>
                       <ExternalLink size={14} />

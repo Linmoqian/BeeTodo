@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import {
   Download,
   FileText,
+  Pin,
   Plus,
   Search,
   Trash2,
@@ -11,6 +12,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AnimatePresence, motion } from "motion/react";
 import { useNotes } from "../hooks/useNotes";
+import { toggleNoteTile } from "../lib/noteWindows";
 
 type EditorMode = "edit" | "preview";
 
@@ -99,6 +101,7 @@ export function NotesPage() {
                 <motion.button
                   layout
                   key={note.id}
+                  data-note-id={note.id}
                   type="button"
                   className={note.id === selectedId ? "note-list-item is-active" : "note-list-item"}
                   onClick={() => setSelectedId(note.id)}
@@ -140,6 +143,9 @@ export function NotesPage() {
                   <button className={mode === "preview" ? "is-active" : ""} type="button" onClick={() => setMode("preview")}>预览</button>
                 </div>
                 <div className="note-actions">
+                  <button type="button" aria-label="固定为桌面磁贴" title="固定为桌面磁贴" onClick={() => void toggleNoteTile(selectedNote.id)}>
+                    <Pin size={16} />
+                  </button>
                   <button type="button" aria-label="导出 Markdown" title="导出 Markdown" onClick={() => downloadMarkdown(selectedNote.title, selectedNote.content)}>
                     <Download size={16} />
                   </button>

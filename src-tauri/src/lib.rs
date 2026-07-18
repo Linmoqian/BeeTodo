@@ -5,7 +5,17 @@ use std::{
     sync::Mutex,
     time::{SystemTime, UNIX_EPOCH},
 };
-use tauri::{Manager, State};
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+    AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder,
+};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+
+const QUICK_NOTE_WINDOW_LABEL: &str = "quick-note";
+const TRAY_SHOW_MAIN_ID: &str = "show-main";
+const TRAY_QUICK_NOTE_ID: &str = "quick-note";
+const TRAY_QUIT_ID: &str = "quit";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -102,7 +112,8 @@ fn load_store(path: &Path) -> Result<TodoStore, String> {
     match serde_json::from_str::<TodoStore>(&raw) {
         Ok(store) => Ok(store),
         Err(_) => {
-            let legacy_todos: Vec<Todo> = serde_json::from_str(&raw).map_err(|err| err.to_string())?;
+            let legacy_todos: Vec<Todo> =
+                serde_json::from_str(&raw).map_err(|err| err.to_string())?;
             Ok(TodoStore {
                 todos: legacy_todos,
                 settings: AppSettings::default(),
@@ -187,7 +198,9 @@ fn start_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
 
     for todo in store.todos.iter_mut() {
         if let Some(started_at) = todo.timer_started_at {
-            todo.elapsed_ms = todo.elapsed_ms.saturating_add(now.saturating_sub(started_at));
+            todo.elapsed_ms = todo
+                .elapsed_ms
+                .saturating_add(now.saturating_sub(started_at));
             todo.timer_started_at = None;
         }
     }
@@ -212,7 +225,9 @@ fn pause_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
             continue;
         }
         if let Some(started_at) = todo.timer_started_at {
-            todo.elapsed_ms = todo.elapsed_ms.saturating_add(now.saturating_sub(started_at));
+            todo.elapsed_ms = todo
+                .elapsed_ms
+                .saturating_add(now.saturating_sub(started_at));
             todo.timer_started_at = None;
         }
         break;
@@ -241,7 +256,11 @@ fn reorder_todos(
 }
 
 #[tauri::command]
-fn set_todo_color(state: State<'_, AppState>, id: String, color: String) -> Result<Vec<Todo>, String> {
+fn set_todo_color(
+    state: State<'_, AppState>,
+    id: String,
+    color: String,
+) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     for todo in store.todos.iter_mut() {
         if todo.id == id {
@@ -289,10 +308,7 @@ fn set_always_on_top(
 }
 
 #[tauri::command]
-fn set_compact_opacity(
-    state: State<'_, AppState>,
-    opacity: u8,
-) -> Result<AppSettings, String> {
+fn set_compact_opacity(state: State<'_, AppState>, opacity: u8) -> Result<AppSettings, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     store.settings.compact_opacity = opacity.min(100);
     persist_store(&state.store_path, &store)?;
@@ -323,9 +339,136 @@ fn set_pet_name(state: State<'_, AppState>, name: String) -> Result<AppSettings,
     Ok(store.settings.clone())
 }
 
+fn show_main_window(app: &AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("main")
+        .ok_or_else(|| "主窗口不存在".to_string())?;
+    window.unminimize().map_err(|err| err.to_string())?;
+    window.show().map_err(|err| err.to_string())?;
+    window.set_focus().map_err(|err| err.to_string())
+}
+
+fn open_quick_note_window_inner(app: &AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(QUICK_NOTE_WINDOW_LABEL) {
+        window.show().map_err(|err| err.to_string())?;
+        window.set_focus().map_err(|err| err.to_string())?;
+        return Ok(());
+    }
+
+    WebviewWindowBuilder::new(
+        app,
+        QUICK_NOTE_WINDOW_LABEL,
+        WebviewUrl::App("index.html#/quick-note".into()),
+    )
+    .title("BeeTodo 快捷便签")
+    .inner_size(380.0, 380.0)
+    .min_inner_size(320.0, 300.0)
+    .resizable(true)
+    .decorations(false)
+    .transparent(true)
+    .always_on_top(true)
+    .shadow(false)
+    .skip_taskbar(true)
+    .center()
+    .build()
+    .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
+fn note_tile_label(note_id: &str) -> String {
+    format!("note-tile-{note_id}")
+}
+
+fn is_valid_note_id(note_id: &str) -> bool {
+    !note_id.is_empty()
+        && note_id
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || character == '-')
+}
+
+#[tauri::command]
+fn open_quick_note_window(app: AppHandle) -> Result<(), String> {
+    open_quick_note_window_inner(&app)
+}
+
+#[tauri::command]
+fn toggle_note_tile(app: AppHandle, note_id: String) -> Result<bool, String> {
+    if !is_valid_note_id(&note_id) {
+        return Err("笔记 ID 格式无效".to_string());
+    }
+    let label = note_tile_label(&note_id);
+    if let Some(window) = app.get_webview_window(&label) {
+        window.close().map_err(|err| err.to_string())?;
+        return Ok(false);
+    }
+
+    WebviewWindowBuilder::new(
+        &app,
+        &label,
+        WebviewUrl::App(format!("index.html#/note-tile/{note_id}").into()),
+    )
+    .title("BeeTodo 笔记磁贴")
+    .inner_size(340.0, 320.0)
+    .min_inner_size(260.0, 220.0)
+    .resizable(true)
+    .decorations(false)
+    .transparent(true)
+    .always_on_top(true)
+    .shadow(false)
+    .skip_taskbar(true)
+    .center()
+    .build()
+    .map_err(|err| err.to_string())?;
+    Ok(true)
+}
+
+fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let show_main = MenuItem::with_id(app, TRAY_SHOW_MAIN_ID, "显示 BeeTodo", true, None::<&str>)?;
+    let quick_note = MenuItem::with_id(app, TRAY_QUICK_NOTE_ID, "快捷便签", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, TRAY_QUIT_ID, "退出", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&show_main, &quick_note, &quit])?;
+
+    TrayIconBuilder::with_id("main-tray")
+        .icon(app.default_window_icon().ok_or("缺少应用图标")?.clone())
+        .tooltip("BeeTodo")
+        .menu(&menu)
+        .show_menu_on_left_click(true)
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            TRAY_SHOW_MAIN_ID => {
+                if let Err(error) = show_main_window(app) {
+                    eprintln!("显示主窗口失败：{error}");
+                }
+            }
+            TRAY_QUICK_NOTE_ID => {
+                if let Err(error) = open_quick_note_window_inner(app) {
+                    eprintln!("打开快捷便签失败：{error}");
+                }
+            }
+            TRAY_QUIT_ID => app.exit(0),
+            _ => {}
+        })
+        .build(app)?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _shortcut, event| {
+                    if event.state() != ShortcutState::Pressed {
+                        return;
+                    }
+                    let app_handle = app.clone();
+                    let _ = app.run_on_main_thread(move || {
+                        if let Err(error) = open_quick_note_window_inner(&app_handle) {
+                            eprintln!("通过快捷键打开便签失败：{error}");
+                        }
+                    });
+                })
+                .build(),
+        )
         .setup(|app| {
             let mut store_path = app.path().app_data_dir()?;
             store_path.push("todos.json");
@@ -338,14 +481,17 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_always_on_top(always_on_top);
             }
+            setup_tray(app)?;
+            if let Err(error) = app.global_shortcut().register("Ctrl+Space") {
+                eprintln!("注册全局快捷键 Ctrl+Space 失败：{error}");
+            }
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 if window.label() == "main" {
-                    if let Some(pet) = window.app_handle().get_webview_window("pet") {
-                        let _ = pet.close();
-                    }
+                    api.prevent_close();
+                    let _ = window.hide();
                 }
             }
         })
@@ -365,8 +511,24 @@ pub fn run() {
             set_compact_opacity,
             set_pet_enabled,
             set_user_name,
-            set_pet_name
+            set_pet_name,
+            open_quick_note_window,
+            toggle_note_tile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_valid_note_id, note_tile_label};
+
+    #[test]
+    fn validates_and_builds_note_tile_labels() {
+        let note_id = "3e2e6074-c135-4b33-83d6-d5506d64d508";
+        assert!(is_valid_note_id(note_id));
+        assert_eq!(note_tile_label(note_id), format!("note-tile-{note_id}"));
+        assert!(!is_valid_note_id("../notes#bad"));
+        assert!(!is_valid_note_id(""));
+    }
 }

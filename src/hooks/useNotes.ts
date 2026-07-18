@@ -20,25 +20,42 @@ export function useNotes() {
   const [notes, setNotes] = useState<StudyNote[]>(() => readLocalNotes());
 
   useEffect(() => {
-    writeLocalNotes(notes);
-  }, [notes]);
+    const syncFromStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === "beetodo-study-notes") {
+        setNotes(readLocalNotes());
+      }
+    };
+    const syncTimer = window.setInterval(() => {
+      const storedNotes = readLocalNotes();
+      setNotes((current) =>
+        JSON.stringify(current) === JSON.stringify(storedNotes) ? current : storedNotes,
+      );
+    }, 800);
+    window.addEventListener("storage", syncFromStorage);
+    return () => {
+      window.clearInterval(syncTimer);
+      window.removeEventListener("storage", syncFromStorage);
+    };
+  }, []);
 
   const addNote = useCallback(() => {
     const note = createNoteDraft();
-    setNotes((current) => [note, ...current]);
+    setNotes((current) => writeLocalNotes([note, ...current]));
     return note.id;
   }, []);
 
   const updateNote = useCallback((id: string, patch: Partial<Pick<StudyNote, "title" | "content" | "category">>) => {
     setNotes((current) =>
-      current.map((note) =>
-        note.id === id ? { ...note, ...patch, updatedAt: Date.now() } : note,
+      writeLocalNotes(
+        current.map((note) =>
+          note.id === id ? { ...note, ...patch, updatedAt: Date.now() } : note,
+        ),
       ),
     );
   }, []);
 
   const removeNote = useCallback((id: string) => {
-    setNotes((current) => current.filter((note) => note.id !== id));
+    setNotes((current) => writeLocalNotes(current.filter((note) => note.id !== id)));
   }, []);
 
   const importNote = useCallback((title: string, content: string) => {
@@ -51,7 +68,7 @@ export function useNotes() {
       createdAt: now,
       updatedAt: now,
     };
-    setNotes((current) => [note, ...current]);
+    setNotes((current) => writeLocalNotes([note, ...current]));
     return note.id;
   }, []);
 
