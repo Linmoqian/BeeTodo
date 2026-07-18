@@ -1518,7 +1518,6 @@ html.desktop-main body {
   border-radius: 22px;
   background: var(--background);
   box-shadow: 0 20px 60px rgb(0 0 0 / 18%);
-  app-region: drag;
 }
 
 .desktop-main .sidebar {
@@ -1529,19 +1528,6 @@ html.desktop-main body {
   height: 100%;
   overflow-y: auto;
   scrollbar-width: none;
-  app-region: drag;
-}
-
-.desktop-main button,
-.desktop-main input,
-.desktop-main textarea,
-.desktop-main a,
-.desktop-main nav,
-.desktop-main [contenteditable="true"],
-.desktop-main .todo-row,
-.desktop-main .notes-workspace,
-.desktop-main .settings-sheet {
-  app-region: no-drag;
 }
 
 .desktop-main .main-content::-webkit-scrollbar {

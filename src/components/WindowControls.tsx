@@ -8,7 +8,7 @@ export function WindowControls() {
   const appWindow = getCurrentWindow();
 
   return (
-    <div className="window-controls" data-tauri-drag-region>
+    <div className="window-controls">
       <button
         className="window-control window-close"
         type="button"
