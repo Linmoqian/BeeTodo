@@ -49,6 +49,7 @@ export async function openPetWindow() {
     width: PET_WINDOW_WIDTH,
     height: PET_WINDOW_HEIGHT,
     decorations: false,
+    devtools: false,
     transparent: true,
     resizable: false,
     maximizable: false,

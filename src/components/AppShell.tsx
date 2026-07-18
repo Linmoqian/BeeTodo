@@ -5,6 +5,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ThemeSettings } from "./ThemeSettings";
 import { isTauriRuntime, type AppSettings } from "../lib/platform";
 import { WindowControls } from "./WindowControls";
+import { AppContextMenu } from "./AppContextMenu";
 
 const NAV_ITEMS = [
   { to: "/", label: "今日", icon: CalendarDays, end: true },
@@ -82,6 +83,7 @@ export function AppShell({ children, onSettingsChange }: AppShellProps) {
           </NavLink>
         ))}
       </nav>
+      <AppContextMenu />
     </div>
   );
 }

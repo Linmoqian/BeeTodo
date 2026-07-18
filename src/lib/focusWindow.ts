@@ -58,6 +58,7 @@ export async function openFocusWindow() {
     width: 380,
     height: 126,
     decorations: false,
+    devtools: false,
     transparent: true,
     resizable: false,
     maximizable: false,

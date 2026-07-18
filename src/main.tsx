@@ -24,6 +24,14 @@ const isQuickNoteView = route === "/quick-note" || legacyView === "quick-note";
 const noteTileMatch = route.match(/^\/note-tile\/(.+)$/);
 const noteTileId = noteTileMatch ? decodeURIComponent(noteTileMatch[1]) : null;
 
+if (isTauriRuntime()) {
+  window.addEventListener(
+    "contextmenu",
+    (event) => event.preventDefault(),
+    { capture: true },
+  );
+}
+
 if (isPetView || isFocusView || isQuickNoteView || noteTileId) {
   document.documentElement.classList.add("widget-view");
   document.documentElement.classList.add(
