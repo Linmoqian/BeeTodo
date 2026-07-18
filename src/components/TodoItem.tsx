@@ -37,6 +37,7 @@ function formatTime(ms: number): string {
 interface TodoItemProps {
   todo: Todo;
   isActive: boolean;
+  dropPosition?: "before" | "after" | null;
   onToggle: (id: string) => void | Promise<void>;
   onRemove: (id: string) => void | Promise<void>;
   onUpdateText: (id: string, text: string) => void | Promise<void>;
@@ -49,6 +50,7 @@ interface TodoItemProps {
 export function TodoItem({
   todo,
   isActive,
+  dropPosition = null,
   onToggle,
   onRemove,
   onUpdateText,
@@ -108,7 +110,7 @@ export function TodoItem({
       transition={{ duration: 0.2 }}
       className={`todo-row todo-${todo.color} ${isActive ? "is-active" : ""} ${
         isDragging ? "is-dragging" : ""
-      } ${menuOpen ? "has-open-menu" : ""}`}
+      } ${dropPosition ? `drop-${dropPosition}` : ""} ${menuOpen ? "has-open-menu" : ""}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
       <button
