@@ -169,6 +169,31 @@ fn add_todo(state: State<'_, AppState>, text: String) -> Result<Vec<Todo>, Strin
     Ok(store.todos.clone())
 }
 
+fn rename_todo(todos: &mut [Todo], id: &str, text: &str) -> Result<(), String> {
+    let text = text.trim();
+    if text.is_empty() {
+        return Err("任务名称不能为空".to_string());
+    }
+    let todo = todos
+        .iter_mut()
+        .find(|todo| todo.id == id)
+        .ok_or_else(|| "任务不存在".to_string())?;
+    todo.text = text.to_string();
+    Ok(())
+}
+
+#[tauri::command]
+fn update_todo_text(
+    state: State<'_, AppState>,
+    id: String,
+    text: String,
+) -> Result<Vec<Todo>, String> {
+    let mut store = state.store.lock().map_err(|err| err.to_string())?;
+    rename_todo(&mut store.todos, &id, &text)?;
+    persist_store(&state.store_path, &store)?;
+    Ok(store.todos.clone())
+}
+
 #[tauri::command]
 fn remove_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
@@ -547,6 +572,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             list_todos,
             add_todo,
+            update_todo_text,
             remove_todo,
             toggle_todo,
             start_timer,
@@ -578,7 +604,19 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_valid_note_id, note_tile_label};
+    use super::{is_valid_note_id, note_tile_label, rename_todo, Todo};
+
+    fn todo(id: &str, text: &str) -> Todo {
+        Todo {
+            id: id.to_string(),
+            text: text.to_string(),
+            completed: false,
+            created_at: 0,
+            elapsed_ms: 0,
+            timer_started_at: None,
+            color: "default".to_string(),
+        }
+    }
 
     #[test]
     fn validates_and_builds_note_tile_labels() {
@@ -587,5 +625,25 @@ mod tests {
         assert_eq!(note_tile_label(note_id), format!("note-tile-{note_id}"));
         assert!(!is_valid_note_id("../notes#bad"));
         assert!(!is_valid_note_id(""));
+    }
+
+    #[test]
+    fn renamed_todo_keeps_its_text_after_add_and_reorder() {
+        let mut todos = vec![todo("one", "旧名称"), todo("two", "第二项")];
+        rename_todo(&mut todos, "one", " 修改后的名称 ").expect("rename should succeed");
+
+        todos.insert(0, todo("three", "新待办"));
+        let renamed_index = todos
+            .iter()
+            .position(|todo| todo.id == "one")
+            .expect("renamed todo should exist");
+        let renamed = todos.remove(renamed_index);
+        todos.push(renamed);
+
+        assert_eq!(
+            todos.last().map(|todo| todo.text.as_str()),
+            Some("修改后的名称")
+        );
+        assert_eq!(todos[0].text, "新待办");
     }
 }
