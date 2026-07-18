@@ -724,7 +724,7 @@ a:focus-visible {
 }
 
 .settings-sheet {
-  width: min(520px, 100%);
+  width: min(580px, 100%);
   max-height: min(720px, calc(100vh - 40px));
   overflow: auto;
   border: 1px solid var(--border);
@@ -781,7 +781,7 @@ a:focus-visible {
   padding: 8px 10px;
   outline: 0;
   background: var(--surface-muted);
-  text-align: right;
+  text-align: center;
 }
 
 .shortcut-field input {
@@ -849,6 +849,19 @@ a:focus-visible {
   font-size: 13px;
 }
 
+.desktop-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.desktop-actions .switch-row {
+  min-height: 42px;
+  border-radius: 11px;
+  padding: 0 11px;
+  background: var(--surface-muted);
+}
+
 .action-row:hover,
 .preview-actions button:hover {
   background: color-mix(in srgb, var(--surface-muted) 72%, var(--accent-soft));
@@ -856,9 +869,36 @@ a:focus-visible {
 
 .preview-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-bottom: 8px;
+}
+
+.preview-actions button {
+  min-height: 54px;
+  align-items: flex-end;
+  padding: 10px 11px;
+  text-align: left;
+}
+
+.preview-actions button span {
+  max-width: 92px;
+  line-height: 1.35;
+}
+
+.desktop-options {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2px 12px;
+  background: color-mix(in srgb, var(--surface-muted) 44%, transparent);
+}
+
+.desktop-options .field-row {
+  border-bottom: 1px solid var(--border);
+}
+
+.desktop-options .settings-error {
+  margin: -5px 0 8px;
 }
 
 .switch {

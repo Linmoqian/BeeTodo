@@ -52,7 +52,7 @@ struct AppSettings {
 }
 
 fn default_user_name() -> String {
-    "龚博后".to_string()
+    "Bee".to_string()
 }
 
 fn default_pet_name() -> String {
@@ -117,7 +117,12 @@ fn load_store(path: &Path) -> Result<TodoStore, String> {
 
     let raw = fs::read_to_string(path).map_err(|err| err.to_string())?;
     match serde_json::from_str::<TodoStore>(&raw) {
-        Ok(store) => Ok(store),
+        Ok(mut store) => {
+            if matches!(store.settings.user_name.as_str(), "工程师" | "龚博后") {
+                store.settings.user_name = default_user_name();
+            }
+            Ok(store)
+        }
         Err(_) => {
             let legacy_todos: Vec<Todo> =
                 serde_json::from_str(&raw).map_err(|err| err.to_string())?;

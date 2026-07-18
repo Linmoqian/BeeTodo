@@ -18,7 +18,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   alwaysOnTop: false,
   compactOpacity: 60,
   petEnabled: false,
-  userName: "工程师",
+  userName: "Bee",
   petName: "小蜜蜂",
   quickNoteShortcut: "Ctrl+Space",
 };
@@ -83,10 +83,15 @@ export async function getAppSettings(): Promise<AppSettings> {
   if (isTauriRuntime()) {
     return invoke<AppSettings>("get_settings");
   }
-  return {
+  const settings = {
     ...DEFAULT_SETTINGS,
     ...readJson<Partial<AppSettings>>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS),
   };
+  if (settings.userName === "工程师" || settings.userName === "龚博后") {
+    settings.userName = DEFAULT_SETTINGS.userName;
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  }
+  return settings;
 }
 
 export async function updateAppSettings(

@@ -163,9 +163,9 @@ export function ThemeSettings({
                   <span>桌面</span>
                 </div>
                 {isTauriRuntime() ? (
-                  <>
+                  <div className="desktop-actions">
                     <button className="action-row" onClick={() => void openQuickNoteWindow()}>
-                      <span>快捷便签 · Ctrl+Space</span>
+                      <span>快捷便签</span>
                       <StickyNote size={15} />
                     </button>
                     <button className="action-row" onClick={() => openWidgetPreview("focus")}>
@@ -189,7 +189,7 @@ export function ThemeSettings({
                       <span>蜜蜂桌宠</span>
                       <span className={`switch ${settings.petEnabled ? "is-on" : ""}`} />
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <div className="preview-actions">
                     <button onClick={() => void openQuickNoteWindow()}>
@@ -206,66 +206,68 @@ export function ThemeSettings({
                     </button>
                   </div>
                 )}
-                <label className="field-row shortcut-field">
-                  <span>快捷便签快捷键</span>
-                  <input
-                    value={settings.quickNoteShortcut}
-                    placeholder="Ctrl+Space"
-                    aria-label="快捷便签快捷键"
-                    onChange={(event) => {
-                      setShortcutError("");
-                      const quickNoteShortcut = event.target.value;
-                      setSettings((current) => ({ ...current, quickNoteShortcut }));
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") event.currentTarget.blur();
-                    }}
-                    onBlur={() => {
-                      const shortcut = settings.quickNoteShortcut.trim();
-                      if (!shortcut) {
-                        setSettings((current) => ({
-                          ...current,
-                          quickNoteShortcut: DEFAULT_SETTINGS.quickNoteShortcut,
-                        }));
-                        setShortcutError("快捷键不能为空");
-                        return;
+                <div className="desktop-options">
+                  <label className="field-row shortcut-field">
+                    <span>快捷便签快捷键</span>
+                    <input
+                      value={settings.quickNoteShortcut}
+                      placeholder="Ctrl+Space"
+                      aria-label="快捷便签快捷键"
+                      onChange={(event) => {
+                        setShortcutError("");
+                        const quickNoteShortcut = event.target.value;
+                        setSettings((current) => ({ ...current, quickNoteShortcut }));
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") event.currentTarget.blur();
+                      }}
+                      onBlur={() => {
+                        const shortcut = settings.quickNoteShortcut.trim();
+                        if (!shortcut) {
+                          setSettings((current) => ({
+                            ...current,
+                            quickNoteShortcut: DEFAULT_SETTINGS.quickNoteShortcut,
+                          }));
+                          setShortcutError("快捷键不能为空");
+                          return;
+                        }
+                        void save(
+                          "set_quick_note_shortcut",
+                          { shortcut },
+                          { quickNoteShortcut: shortcut },
+                        ).then(
+                          () => setShortcutError(""),
+                          () => {
+                            setShortcutError("快捷键不可用，请换一个组合");
+                            void getAppSettings().then(setSettings);
+                          },
+                        );
+                      }}
+                    />
+                  </label>
+                  {shortcutError && <p className="settings-error">{shortcutError}</p>}
+                  <label className="range-row">
+                    <span>磁贴透明度</span>
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      value={settings.compactOpacity}
+                      onChange={(event) => {
+                        const compactOpacity = Number(event.target.value);
+                        setSettings((current) => ({ ...current, compactOpacity }));
+                        onOpacityChange?.(compactOpacity);
+                      }}
+                      onMouseUp={() =>
+                        void save(
+                          "set_compact_opacity",
+                          { opacity: settings.compactOpacity },
+                          { compactOpacity: settings.compactOpacity },
+                        )
                       }
-                      void save(
-                        "set_quick_note_shortcut",
-                        { shortcut },
-                        { quickNoteShortcut: shortcut },
-                      ).then(
-                        () => setShortcutError(""),
-                        () => {
-                          setShortcutError("快捷键不可用，请换一个组合");
-                          void getAppSettings().then(setSettings);
-                        },
-                      );
-                    }}
-                  />
-                </label>
-                {shortcutError && <p className="settings-error">{shortcutError}</p>}
-                <label className="range-row">
-                  <span>磁贴透明度</span>
-                  <input
-                    type="range"
-                    min="20"
-                    max="100"
-                    value={settings.compactOpacity}
-                    onChange={(event) => {
-                      const compactOpacity = Number(event.target.value);
-                      setSettings((current) => ({ ...current, compactOpacity }));
-                      onOpacityChange?.(compactOpacity);
-                    }}
-                    onMouseUp={() =>
-                      void save(
-                        "set_compact_opacity",
-                        { opacity: settings.compactOpacity },
-                        { compactOpacity: settings.compactOpacity },
-                      )
-                    }
-                  />
-                </label>
+                    />
+                  </label>
+                </div>
               </div>
               </motion.section>
             </motion.div>
