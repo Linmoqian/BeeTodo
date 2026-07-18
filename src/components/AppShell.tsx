@@ -3,6 +3,7 @@ import { BookOpenText, CalendarDays, CheckCircle2, ListTodo, NotebookPen } from 
 import { NavLink } from "react-router-dom";
 import { ThemeSettings } from "./ThemeSettings";
 import type { AppSettings } from "../lib/platform";
+import { WindowControls } from "./WindowControls";
 
 const NAV_ITEMS = [
   { to: "/", label: "今日", icon: CalendarDays, end: true },
@@ -18,9 +19,10 @@ interface AppShellProps {
 
 export function AppShell({ children, onSettingsChange }: AppShellProps) {
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-tauri-drag-region>
       <aside className="sidebar">
-        <div className="brand-mark" aria-label="BeeTodo">
+        <WindowControls />
+        <div className="brand-mark" aria-label="BeeTodo" data-tauri-drag-region>
           <span><ListTodo size={18} strokeWidth={2.3} /></span>
           <strong>BeeTodo</strong>
         </div>

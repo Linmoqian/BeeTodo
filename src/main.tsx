@@ -38,6 +38,8 @@ if (isPetView || isFocusView || isQuickNoteView || noteTileId) {
   document.documentElement.classList.add(
     isTauriRuntime() ? "desktop-widget" : "web-widget-preview",
   );
+} else if (isTauriRuntime()) {
+  document.documentElement.classList.add("desktop-main");
 }
 
 const rootElement = isPetView ? (

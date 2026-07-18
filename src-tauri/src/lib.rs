@@ -47,6 +47,8 @@ struct AppSettings {
     user_name: String,
     #[serde(default = "default_pet_name")]
     pet_name: String,
+    #[serde(default = "default_quick_note_shortcut")]
+    quick_note_shortcut: String,
 }
 
 fn default_user_name() -> String {
@@ -61,6 +63,10 @@ fn default_compact_opacity() -> u8 {
     60
 }
 
+fn default_quick_note_shortcut() -> String {
+    "Ctrl+Space".to_string()
+}
+
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
@@ -69,6 +75,7 @@ impl Default for AppSettings {
             pet_enabled: false,
             user_name: default_user_name(),
             pet_name: default_pet_name(),
+            quick_note_shortcut: default_quick_note_shortcut(),
         }
     }
 }
@@ -339,6 +346,41 @@ fn set_pet_name(state: State<'_, AppState>, name: String) -> Result<AppSettings,
     Ok(store.settings.clone())
 }
 
+#[tauri::command]
+fn set_quick_note_shortcut(
+    state: State<'_, AppState>,
+    app: AppHandle,
+    shortcut: String,
+) -> Result<AppSettings, String> {
+    let shortcut = shortcut.trim().to_string();
+    if shortcut.is_empty() {
+        return Err("快捷键不能为空".to_string());
+    }
+
+    let previous_shortcut = {
+        let store = state.store.lock().map_err(|err| err.to_string())?;
+        store.settings.quick_note_shortcut.clone()
+    };
+
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|err| err.to_string())?;
+    if let Err(error) = app.global_shortcut().register(shortcut.as_str()) {
+        let _ = app.global_shortcut().register(previous_shortcut.as_str());
+        return Err(format!("快捷键不可用：{error}"));
+    }
+
+    let mut store = state.store.lock().map_err(|err| err.to_string())?;
+    store.settings.quick_note_shortcut = shortcut;
+    if let Err(error) = persist_store(&state.store_path, &store) {
+        store.settings.quick_note_shortcut = previous_shortcut.clone();
+        let _ = app.global_shortcut().unregister_all();
+        let _ = app.global_shortcut().register(previous_shortcut.as_str());
+        return Err(error);
+    }
+    Ok(store.settings.clone())
+}
+
 fn show_main_window(app: &AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window("main")
@@ -474,6 +516,7 @@ pub fn run() {
             store_path.push("todos.json");
             let store = load_store(&store_path)?;
             let always_on_top = store.settings.always_on_top;
+            let quick_note_shortcut = store.settings.quick_note_shortcut.clone();
             app.manage(AppState {
                 store: Mutex::new(store),
                 store_path,
@@ -482,8 +525,8 @@ pub fn run() {
                 let _ = window.set_always_on_top(always_on_top);
             }
             setup_tray(app)?;
-            if let Err(error) = app.global_shortcut().register("Ctrl+Space") {
-                eprintln!("注册全局快捷键 Ctrl+Space 失败：{error}");
+            if let Err(error) = app.global_shortcut().register(quick_note_shortcut.as_str()) {
+                eprintln!("注册全局快捷键 {quick_note_shortcut} 失败：{error}");
             }
             Ok(())
         })
@@ -512,11 +555,20 @@ pub fn run() {
             set_pet_enabled,
             set_user_name,
             set_pet_name,
+            set_quick_note_shortcut,
             open_quick_note_window,
             toggle_note_tile
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen { .. } = event {
+                if let Err(error) = show_main_window(app) {
+                    eprintln!("从 Dock 恢复主窗口失败：{error}");
+                }
+            }
+        });
 }
 
 #[cfg(test)]

@@ -36,6 +36,7 @@ export function ThemeSettings({
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [shortcutError, setShortcutError] = useState("");
 
   useEffect(() => {
     void getAppSettings().then((nextSettings) => {
@@ -52,6 +53,7 @@ export function ThemeSettings({
     const nextSettings = await updateAppSettings(command, args, patch);
     setSettings(nextSettings);
     onSettingsChange?.(nextSettings);
+    return nextSettings;
   };
 
   const togglePet = async () => {
@@ -204,6 +206,45 @@ export function ThemeSettings({
                     </button>
                   </div>
                 )}
+                <label className="field-row shortcut-field">
+                  <span>快捷便签快捷键</span>
+                  <input
+                    value={settings.quickNoteShortcut}
+                    placeholder="Ctrl+Space"
+                    aria-label="快捷便签快捷键"
+                    onChange={(event) => {
+                      setShortcutError("");
+                      const quickNoteShortcut = event.target.value;
+                      setSettings((current) => ({ ...current, quickNoteShortcut }));
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                    }}
+                    onBlur={() => {
+                      const shortcut = settings.quickNoteShortcut.trim();
+                      if (!shortcut) {
+                        setSettings((current) => ({
+                          ...current,
+                          quickNoteShortcut: DEFAULT_SETTINGS.quickNoteShortcut,
+                        }));
+                        setShortcutError("快捷键不能为空");
+                        return;
+                      }
+                      void save(
+                        "set_quick_note_shortcut",
+                        { shortcut },
+                        { quickNoteShortcut: shortcut },
+                      ).then(
+                        () => setShortcutError(""),
+                        () => {
+                          setShortcutError("快捷键不可用，请换一个组合");
+                          void getAppSettings().then(setSettings);
+                        },
+                      );
+                    }}
+                  />
+                </label>
+                {shortcutError && <p className="settings-error">{shortcutError}</p>}
                 <label className="range-row">
                   <span>磁贴透明度</span>
                   <input

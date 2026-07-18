@@ -144,6 +144,38 @@ a:focus-visible {
   backdrop-filter: blur(28px) saturate(150%);
 }
 
+.window-controls {
+  display: flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 8px 18px;
+}
+
+.window-control {
+  display: grid;
+  width: 12px;
+  height: 12px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  color: rgb(40 40 40 / 0%);
+  transition: color 120ms ease, filter 120ms ease;
+}
+
+.window-controls:hover .window-control {
+  color: rgb(40 40 40 / 70%);
+}
+
+.window-control:hover {
+  filter: brightness(0.94);
+}
+
+.window-close { background: #ff5f57; }
+.window-minimize { background: #ffbd2e; }
+.window-zoom { background: #28c840; }
+
 .brand-mark {
   display: flex;
   align-items: center;
@@ -749,6 +781,18 @@ a:focus-visible {
   padding: 8px 10px;
   outline: 0;
   background: var(--surface-muted);
+  text-align: right;
+}
+
+.shortcut-field input {
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.settings-error {
+  margin: -2px 0 8px;
+  color: var(--danger);
+  font-size: 10px;
   text-align: right;
 }
 
@@ -1449,6 +1493,65 @@ html.desktop-widget #root {
   background: transparent !important;
 }
 
+html.desktop-main,
+html.desktop-main body,
+html.desktop-main #root {
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+}
+
+html.desktop-main body {
+  overflow: hidden;
+  padding: 8px;
+}
+
+.desktop-main #root {
+  height: 100%;
+}
+
+.desktop-main .app-shell {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 22px;
+  background: var(--background);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 18%);
+  app-region: drag;
+}
+
+.desktop-main .sidebar {
+  height: 100%;
+}
+
+.desktop-main .main-content {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  app-region: drag;
+}
+
+.desktop-main button,
+.desktop-main input,
+.desktop-main textarea,
+.desktop-main a,
+.desktop-main nav,
+.desktop-main [contenteditable="true"],
+.desktop-main .todo-row,
+.desktop-main .notes-workspace,
+.desktop-main .settings-sheet {
+  app-region: no-drag;
+}
+
+.desktop-main .main-content::-webkit-scrollbar {
+  display: none;
+}
+
+.desktop-main .main-content:has(.notes-page) {
+  height: 100%;
+}
+
 html.widget-view body {
   overflow: hidden;
 }
@@ -1703,6 +1806,27 @@ html.web-widget-preview #root {
 .quick-note-window footer > span {
   color: var(--faint);
   font-size: 9px;
+}
+
+.quick-note-window header > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quick-note-window header button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.quick-note-window header button:hover {
+  color: var(--foreground);
+  background: var(--surface-muted);
 }
 
 .quick-note-window > input {

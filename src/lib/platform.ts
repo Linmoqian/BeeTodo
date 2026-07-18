@@ -11,6 +11,7 @@ export interface AppSettings {
   petEnabled: boolean;
   userName: string;
   petName: string;
+  quickNoteShortcut: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -19,6 +20,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   petEnabled: false,
   userName: "工程师",
   petName: "小蜜蜂",
+  quickNoteShortcut: "Ctrl+Space",
 };
 
 export function isTauriRuntime(): boolean {
@@ -81,7 +83,10 @@ export async function getAppSettings(): Promise<AppSettings> {
   if (isTauriRuntime()) {
     return invoke<AppSettings>("get_settings");
   }
-  return readJson<AppSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
+  return {
+    ...DEFAULT_SETTINGS,
+    ...readJson<Partial<AppSettings>>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS),
+  };
 }
 
 export async function updateAppSettings(
