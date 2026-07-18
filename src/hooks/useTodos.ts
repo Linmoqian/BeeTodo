@@ -1,92 +1,177 @@
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import {
+  isTauriRuntime,
+  readLocalTodos,
+  writeLocalTodos,
+} from "../lib/platform";
 import type { StoredTodo, TodoColor } from "../types";
 
+type TodoUpdater = (todos: StoredTodo[]) => StoredTodo[];
+
 export function useTodos() {
-  const [todos, setTodos] = useState<StoredTodo[]>([]);
+  const [todos, setTodos] = useState<StoredTodo[]>(() =>
+    isTauriRuntime() ? [] : readLocalTodos(),
+  );
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    invoke<StoredTodo[]>("list_todos")
-      .then((nextTodos) => {
-        if (mounted) {
-          setTodos(nextTodos);
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to load todos", error);
-      });
-
-    return () => {
-      mounted = false;
-    };
+    if (!isTauriRuntime()) return;
+    void invoke<StoredTodo[]>("list_todos")
+      .then(setTodos)
+      .catch((error) => console.error("Failed to load todos", error));
   }, []);
 
-  const addTodo = useCallback(async (text: string) => {
-    const nextTodos = await invoke<StoredTodo[]>("add_todo", { text });
-    setTodos(nextTodos);
+  const updateLocal = useCallback((updater: TodoUpdater) => {
+    setTodos((current) => writeLocalTodos(updater(current)));
   }, []);
 
-  const removeTodo = useCallback(async (id: string) => {
-    const nextTodos = await invoke<StoredTodo[]>("remove_todo", { id });
-    setTodos(nextTodos);
-  }, []);
+  const runCommand = useCallback(
+    async (command: string, args: Record<string, unknown>, updater: TodoUpdater) => {
+      if (isTauriRuntime()) {
+        setTodos(await invoke<StoredTodo[]>(command, args));
+        return;
+      }
+      updateLocal(updater);
+    },
+    [updateLocal],
+  );
 
-  const toggleTodo = useCallback(async (id: string) => {
-    const nextTodos = await invoke<StoredTodo[]>("toggle_todo", { id });
-    setTodos(nextTodos);
-  }, []);
+  const addTodo = useCallback(
+    (text: string) =>
+      runCommand("add_todo", { text }, (current) => [
+        {
+          id: crypto.randomUUID(),
+          text,
+          completed: false,
+          createdAt: Date.now(),
+          elapsedMs: 0,
+          timerStartedAt: null,
+          color: "default",
+        },
+        ...current,
+      ]),
+    [runCommand],
+  );
 
-  const startTimer = useCallback(async (id: string) => {
-    const nextTodos = await invoke<StoredTodo[]>("start_timer", { id });
-    setTodos(nextTodos);
-  }, []);
+  const removeTodo = useCallback(
+    (id: string) =>
+      runCommand("remove_todo", { id }, (current) =>
+        current.filter((todo) => todo.id !== id),
+      ),
+    [runCommand],
+  );
 
-  const pauseTimer = useCallback(async (id: string) => {
-    const nextTodos = await invoke<StoredTodo[]>("pause_timer", { id });
-    setTodos(nextTodos);
-  }, []);
+  const toggleTodo = useCallback(
+    (id: string) =>
+      runCommand("toggle_todo", { id }, (current) => {
+        const target = current.find((todo) => todo.id === id);
+        if (!target) return current;
+        const completed = !target.completed;
+        const elapsedMs = target.timerStartedAt
+          ? target.elapsedMs + Date.now() - target.timerStartedAt
+          : target.elapsedMs;
+        const next = {
+          ...target,
+          completed,
+          elapsedMs,
+          timerStartedAt: null,
+        };
+        const rest = current.filter((todo) => todo.id !== id);
+        return completed ? [...rest, next] : [next, ...rest];
+      }),
+    [runCommand],
+  );
 
-  const reorderTodos = useCallback(async (activeId: string, overId: string) => {
-    const nextTodos = await invoke<StoredTodo[]>("reorder_todos", {
-      activeId,
-      overId,
-    });
-    setTodos(nextTodos);
-  }, []);
+  const startTimer = useCallback(
+    (id: string) =>
+      runCommand("start_timer", { id }, (current) => {
+        const startedAt = Date.now();
+        return current.map((todo) => {
+          const elapsedMs = todo.timerStartedAt
+            ? todo.elapsedMs + startedAt - todo.timerStartedAt
+            : todo.elapsedMs;
+          return {
+            ...todo,
+            elapsedMs,
+            timerStartedAt:
+              todo.id === id && !todo.completed ? startedAt : null,
+          };
+        });
+      }),
+    [runCommand],
+  );
 
-  const setTodoColor = useCallback(async (id: string, color: TodoColor) => {
-    const nextTodos = await invoke<StoredTodo[]>("set_todo_color", { id, color });
-    setTodos(nextTodos);
-  }, []);
+  const pauseTimer = useCallback(
+    (id: string) =>
+      runCommand("pause_timer", { id }, (current) =>
+        current.map((todo) =>
+          todo.id === id && todo.timerStartedAt
+            ? {
+                ...todo,
+                elapsedMs: todo.elapsedMs + Date.now() - todo.timerStartedAt,
+                timerStartedAt: null,
+              }
+            : todo,
+        ),
+      ),
+    [runCommand],
+  );
 
-  const pinTodoTop = useCallback(async (id: string) => {
-    const nextTodos = await invoke<StoredTodo[]>("pin_todo_top", { id });
-    setTodos(nextTodos);
-  }, []);
+  const reorderTodos = useCallback(
+    (activeId: string, overId: string) =>
+      runCommand("reorder_todos", { activeId, overId }, (current) => {
+        const from = current.findIndex((todo) => todo.id === activeId);
+        const to = current.findIndex((todo) => todo.id === overId);
+        if (from < 0 || to < 0) return current;
+        const next = [...current];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        return next;
+      }),
+    [runCommand],
+  );
 
-  const todosWithLiveTime = todos.map((t) => {
-    const liveMs = t.timerStartedAt
-      ? t.elapsedMs + (now - t.timerStartedAt)
-      : t.elapsedMs;
-    return { ...t, liveMs };
-  });
+  const setTodoColor = useCallback(
+    (id: string, color: TodoColor) =>
+      runCommand("set_todo_color", { id, color }, (current) =>
+        current.map((todo) => (todo.id === id ? { ...todo, color } : todo)),
+      ),
+    [runCommand],
+  );
 
-  const totalMs = todosWithLiveTime.reduce((sum, t) => sum + t.liveMs, 0);
+  const pinTodoTop = useCallback(
+    (id: string) =>
+      runCommand("pin_todo_top", { id }, (current) => {
+        const target = current.find((todo) => todo.id === id);
+        return target
+          ? [target, ...current.filter((todo) => todo.id !== id)]
+          : current;
+      }),
+    [runCommand],
+  );
 
-  const activeTimerId =
-    todos.find((todo) => todo.timerStartedAt !== null)?.id ?? null;
+  const liveTodos = useMemo(
+    () =>
+      todos.map((todo) => ({
+        ...todo,
+        liveMs: todo.timerStartedAt
+          ? todo.elapsedMs + now - todo.timerStartedAt
+          : todo.elapsedMs,
+      })),
+    [now, todos],
+  );
 
   return {
-    todos: todosWithLiveTime,
-    totalMs,
-    activeTimerId,
+    todos: liveTodos,
+    totalMs: liveTodos.reduce((sum, todo) => sum + todo.liveMs, 0),
+    activeTimerId:
+      todos.find((todo) => todo.timerStartedAt !== null)?.id ?? null,
     addTodo,
     removeTodo,
     toggleTodo,

@@ -4,6 +4,7 @@ import {
   getAllWebviewWindows,
   WebviewWindow,
 } from "@tauri-apps/api/webviewWindow";
+import { isTauriRuntime } from "./platform";
 
 const PET_WINDOW_LABEL = "pet";
 const PET_WINDOW_WIDTH = 180;
@@ -35,6 +36,7 @@ async function positionPetWindow(window: WebviewWindow) {
 }
 
 export async function openPetWindow() {
+  if (!isTauriRuntime()) return;
   const existingWindow = await findPetWindow();
   if (existingWindow) {
     await existingWindow.show();
@@ -67,6 +69,7 @@ export async function openPetWindow() {
 }
 
 export async function closePetWindow() {
+  if (!isTauriRuntime()) return;
   const petWindow = await findPetWindow();
   if (petWindow) {
     await petWindow.close();

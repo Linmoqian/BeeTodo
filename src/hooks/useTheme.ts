@@ -9,18 +9,18 @@ interface ThemeMeta {
 }
 
 export const THEMES: ThemeMeta[] = [
-  { id: "dark", label: "暗夜", color: "oklch(0.78 0.16 75)" },
-  { id: "light", label: "浅色", color: "oklch(0.45 0.02 260)" },
-  { id: "pink", label: "少女粉", color: "oklch(0.72 0.19 350)" },
-  { id: "honey", label: "蜜蜂黄", color: "oklch(0.82 0.17 85)" },
+  { id: "light", label: "明亮", color: "#f5f5f7" },
+  { id: "dark", label: "深色", color: "#1c1c1e" },
+  { id: "honey", label: "暖阳", color: "#f4c752" },
+  { id: "pink", label: "雾粉", color: "#e7b7c8" },
 ];
 
-const STORAGE_KEY = "chronos-theme";
+const STORAGE_KEY = "beetodo-theme";
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return (stored as Theme) || "dark";
+    return (stored as Theme) || "light";
   });
 
   useEffect(() => {

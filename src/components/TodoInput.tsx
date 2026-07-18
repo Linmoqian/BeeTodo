@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Plus } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ArrowUp } from "lucide-react";
 
 interface TodoInputProps {
   onAdd: (text: string) => void | Promise<void>;
@@ -10,35 +9,33 @@ interface TodoInputProps {
 export function TodoInput({ onAdd }: TodoInputProps) {
   const [text, setText] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    void onAdd(trimmed);
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const nextText = text.trim();
+    if (!nextText) return;
+    void onAdd(nextText);
     setText("");
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      autoComplete="off"
-      className="relative flex items-center overflow-hidden rounded-2xl border border-border/40 bg-card p-1 shadow-sm transition-shadow focus-within:border-primary/50 focus-within:shadow-md"
-    >
-      <Input
+    <form className="task-composer" onSubmit={handleSubmit} autoComplete="off">
+      <label className="sr-only" htmlFor="new-task">
+        添加任务
+      </label>
+      <input
+        id="new-task"
         value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="添加新任务..."
-        autoComplete="off"
+        onChange={(event) => setText(event.target.value)}
+        placeholder="接下来要做什么？"
         spellCheck={false}
-        className="flex-1 border-0 bg-transparent px-4 text-base shadow-none outline-none focus-visible:ring-0"
       />
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
         type="submit"
-        className="mr-1 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+        aria-label="添加任务"
+        disabled={!text.trim()}
+        whileTap={{ scale: 0.92 }}
       >
-        <Plus size={20} strokeWidth={2.5} />
+        <ArrowUp size={17} strokeWidth={2.4} />
       </motion.button>
     </form>
   );
