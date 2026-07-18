@@ -7,6 +7,7 @@ import {
   GripVertical,
   MoreHorizontal,
   Pause,
+  Pencil,
   Pin,
   Play,
   Trash2,
@@ -38,6 +39,7 @@ interface TodoItemProps {
   isActive: boolean;
   onToggle: (id: string) => void | Promise<void>;
   onRemove: (id: string) => void | Promise<void>;
+  onUpdateText: (id: string, text: string) => void | Promise<void>;
   onStartTimer: (id: string) => void | Promise<void>;
   onPauseTimer: (id: string) => void | Promise<void>;
   onSetColor: (id: string, color: TodoColor) => void | Promise<void>;
@@ -49,12 +51,15 @@ export function TodoItem({
   isActive,
   onToggle,
   onRemove,
+  onUpdateText,
   onStartTimer,
   onPauseTimer,
   onSetColor,
   onPinTop,
 }: TodoItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftText, setDraftText] = useState(todo.text);
   const menuRef = useRef<HTMLDivElement>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: todo.id });
@@ -80,6 +85,19 @@ export function TodoItem({
     void (isActive ? onPauseTimer(todo.id) : onStartTimer(todo.id));
   };
 
+  const startEditing = () => {
+    setDraftText(todo.text);
+    setMenuOpen(false);
+    setEditing(true);
+  };
+
+  const saveText = () => {
+    const text = draftText.trim();
+    if (text && text !== todo.text) void onUpdateText(todo.id, text);
+    setDraftText(text || todo.text);
+    setEditing(false);
+  };
+
   return (
     <motion.article
       ref={setNodeRef}
@@ -90,7 +108,7 @@ export function TodoItem({
       transition={{ duration: 0.2 }}
       className={`todo-row todo-${todo.color} ${isActive ? "is-active" : ""} ${
         isDragging ? "is-dragging" : ""
-      }`}
+      } ${menuOpen ? "has-open-menu" : ""}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
       <button
@@ -111,7 +129,36 @@ export function TodoItem({
       </button>
 
       <div className="todo-copy">
-        <span className={todo.completed ? "is-completed" : ""}>{todo.text}</span>
+        {editing ? (
+          <input
+            className="todo-title-input"
+            aria-label="编辑任务名称"
+            value={draftText}
+            maxLength={120}
+            autoFocus
+            onFocus={(event) => event.currentTarget.select()}
+            onChange={(event) => setDraftText(event.target.value)}
+            onBlur={saveText}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                event.currentTarget.blur();
+              }
+              if (event.key === "Escape") {
+                setDraftText(todo.text);
+                setEditing(false);
+              }
+            }}
+          />
+        ) : (
+          <span
+            className={todo.completed ? "is-completed" : ""}
+            title="双击重命名"
+            onDoubleClick={startEditing}
+          >
+            {todo.text}
+          </span>
+        )}
         <small>{isActive ? "正在专注" : todo.liveMs > 0 ? "已记录" : "尚未开始"}</small>
       </div>
 
@@ -145,6 +192,9 @@ export function TodoItem({
             >
               <button onClick={() => void onPinTop(todo.id)}>
                 <Pin size={14} /> 置顶
+              </button>
+              <button className="rename-button" onClick={startEditing}>
+                <Pencil size={14} /> 重命名
               </button>
               <div className="color-options" aria-label="任务颜色">
                 {COLORS.map((color) => (

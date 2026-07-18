@@ -33,6 +33,7 @@ function App() {
                 activeTimerId={todos.activeTimerId}
                 addTodo={todos.addTodo}
                 removeTodo={todos.removeTodo}
+                updateTodoText={todos.updateTodoText}
                 toggleTodo={todos.toggleTodo}
                 startTimer={todos.startTimer}
                 pauseTimer={todos.pauseTimer}
@@ -50,6 +51,7 @@ function App() {
                 activeTimerId={todos.activeTimerId}
                 addTodo={todos.addTodo}
                 removeTodo={todos.removeTodo}
+                updateTodoText={todos.updateTodoText}
                 toggleTodo={todos.toggleTodo}
                 startTimer={todos.startTimer}
                 pauseTimer={todos.pauseTimer}

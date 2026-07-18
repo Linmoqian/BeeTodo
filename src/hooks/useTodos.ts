@@ -67,6 +67,14 @@ export function useTodos() {
     [runCommand],
   );
 
+  const updateTodoText = useCallback(
+    (id: string, text: string) =>
+      runCommand("update_todo_text", { id, text }, (current) =>
+        current.map((todo) => (todo.id === id ? { ...todo, text } : todo)),
+      ),
+    [runCommand],
+  );
+
   const toggleTodo = useCallback(
     (id: string) =>
       runCommand("toggle_todo", { id }, (current) => {
@@ -174,6 +182,7 @@ export function useTodos() {
       todos.find((todo) => todo.timerStartedAt !== null)?.id ?? null,
     addTodo,
     removeTodo,
+    updateTodoText,
     toggleTodo,
     startTimer,
     pauseTimer,

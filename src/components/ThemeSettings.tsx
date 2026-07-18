@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, Monitor, Palette, Settings, UserRound, X } from "lucide-react";
 import { THEMES, useTheme } from "../hooks/useTheme";
@@ -53,8 +54,9 @@ export function ThemeSettings({
         <Settings size={17} />
       </button>
 
-      <AnimatePresence>
-        {open && (
+      {createPortal(
+        <AnimatePresence>
+          {open && (
           <motion.div
             className="modal-backdrop"
             initial={{ opacity: 0 }}
@@ -179,8 +181,10 @@ export function ThemeSettings({
               </div>
             </motion.section>
           </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </>
   );
 }

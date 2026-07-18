@@ -47,6 +47,7 @@ export function TasksPage({ todos, ...actions }: TasksPageProps) {
           activeTimerId={actions.activeTimerId}
           onToggle={actions.toggleTodo}
           onRemove={actions.removeTodo}
+          onUpdateText={actions.updateTodoText}
           onReorder={actions.reorderTodos}
           onStartTimer={actions.startTimer}
           onPauseTimer={actions.pauseTimer}

@@ -421,6 +421,10 @@ a:focus-visible {
   box-shadow: var(--shadow);
 }
 
+.todo-row.has-open-menu {
+  z-index: 40;
+}
+
 .todo-amber { box-shadow: inset 3px 0 #f2b43a; }
 .todo-rose { box-shadow: inset 3px 0 #dd7b9f; }
 .todo-emerald { box-shadow: inset 3px 0 #5cad82; }
@@ -485,6 +489,20 @@ a:focus-visible {
 .todo-copy > span.is-completed {
   color: var(--faint);
   text-decoration: line-through;
+}
+
+.todo-title-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid var(--accent);
+  border-radius: 0;
+  padding: 0 0 2px;
+  outline: 0;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 560;
+  letter-spacing: -0.01em;
 }
 
 .todo-copy small {

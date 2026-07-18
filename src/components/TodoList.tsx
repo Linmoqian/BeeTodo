@@ -19,6 +19,7 @@ interface TodoListProps {
   activeTimerId: string | null;
   onToggle: (id: string) => void | Promise<void>;
   onRemove: (id: string) => void | Promise<void>;
+  onUpdateText: (id: string, text: string) => void | Promise<void>;
   onReorder: (activeId: string, overId: string) => void | Promise<void>;
   onStartTimer: (id: string) => void | Promise<void>;
   onPauseTimer: (id: string) => void | Promise<void>;
@@ -31,6 +32,7 @@ export function TodoList({
   activeTimerId,
   onToggle,
   onRemove,
+  onUpdateText,
   onReorder,
   onStartTimer,
   onPauseTimer,
@@ -59,7 +61,7 @@ export function TodoList({
         items={todos.map((t) => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           {todos.map((todo) => (
             <TodoItem
               key={todo.id}
@@ -67,6 +69,7 @@ export function TodoList({
               isActive={activeTimerId === todo.id}
               onToggle={onToggle}
               onRemove={onRemove}
+              onUpdateText={onUpdateText}
               onStartTimer={onStartTimer}
               onPauseTimer={onPauseTimer}
               onSetColor={onSetColor}

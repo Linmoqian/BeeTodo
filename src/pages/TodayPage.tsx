@@ -18,6 +18,7 @@ export interface TodoActions {
   activeTimerId: string | null;
   addTodo: (text: string) => void | Promise<void>;
   removeTodo: (id: string) => void | Promise<void>;
+  updateTodoText: (id: string, text: string) => void | Promise<void>;
   toggleTodo: (id: string) => void | Promise<void>;
   startTimer: (id: string) => void | Promise<void>;
   pauseTimer: (id: string) => void | Promise<void>;
@@ -71,6 +72,7 @@ export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPagePro
             activeTimerId={actions.activeTimerId}
             onToggle={actions.toggleTodo}
             onRemove={actions.removeTodo}
+            onUpdateText={actions.updateTodoText}
             onReorder={actions.reorderTodos}
             onStartTimer={actions.startTimer}
             onPauseTimer={actions.pauseTimer}
