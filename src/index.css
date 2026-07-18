@@ -75,6 +75,74 @@
   --shadow: 0 18px 50px rgb(75 45 58 / 9%);
 }
 
+[data-theme="ocean"] {
+  --background: #edf4f7;
+  --foreground: #17282f;
+  --surface: rgb(249 253 255 / 85%);
+  --surface-solid: #f9fdff;
+  --surface-muted: #dfecef;
+  --muted-foreground: #61747c;
+  --faint: #9bafb7;
+  --border: rgb(40 82 98 / 13%);
+  --primary: #183b4a;
+  --primary-foreground: #f8fdff;
+  --accent: #2f8eb8;
+  --accent-soft: rgb(47 142 184 / 13%);
+  --danger: #d84a45;
+  --shadow: 0 18px 50px rgb(38 88 108 / 10%);
+}
+
+[data-theme="sage"] {
+  --background: #f0f4ed;
+  --foreground: #253026;
+  --surface: rgb(252 255 249 / 85%);
+  --surface-solid: #fcfff9;
+  --surface-muted: #e2eadf;
+  --muted-foreground: #687567;
+  --faint: #a5b1a2;
+  --border: rgb(53 80 50 / 13%);
+  --primary: #304a33;
+  --primary-foreground: #fbfff9;
+  --accent: #6d9566;
+  --accent-soft: rgb(109 149 102 / 14%);
+  --danger: #d55248;
+  --shadow: 0 18px 50px rgb(49 76 46 / 9%);
+}
+
+[data-theme="lavender"] {
+  --background: #f3f0f8;
+  --foreground: #292430;
+  --surface: rgb(253 251 255 / 85%);
+  --surface-solid: #fdfbff;
+  --surface-muted: #e8e2f0;
+  --muted-foreground: #71697c;
+  --faint: #aba2b7;
+  --border: rgb(73 55 93 / 12%);
+  --primary: #40344f;
+  --primary-foreground: #fdfbff;
+  --accent: #8b70b3;
+  --accent-soft: rgb(139 112 179 / 14%);
+  --danger: #d14e63;
+  --shadow: 0 18px 50px rgb(65 48 83 / 9%);
+}
+
+[data-theme="coral"] {
+  --background: #f8f1ee;
+  --foreground: #322522;
+  --surface: rgb(255 252 250 / 85%);
+  --surface-solid: #fffcfa;
+  --surface-muted: #f0e3de;
+  --muted-foreground: #7d6b65;
+  --faint: #b9a49d;
+  --border: rgb(94 59 49 / 12%);
+  --primary: #52342c;
+  --primary-foreground: #fffaf8;
+  --accent: #d9755e;
+  --accent-soft: rgb(217 117 94 / 14%);
+  --danger: #cf4046;
+  --shadow: 0 18px 50px rgb(91 55 45 / 9%);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -861,8 +929,7 @@ a:focus-visible {
   background: transparent;
 }
 
-.action-row,
-.preview-actions button {
+.action-row {
   display: flex;
   width: 100%;
   min-height: 42px;
@@ -888,27 +955,8 @@ a:focus-visible {
   background: var(--surface-muted);
 }
 
-.action-row:hover,
-.preview-actions button:hover {
+.action-row:hover {
   background: color-mix(in srgb, var(--surface-muted) 72%, var(--accent-soft));
-}
-
-.preview-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.preview-actions button {
-  min-height: 54px;
-  align-items: flex-end;
-  padding: 10px 11px;
-  text-align: left;
-}
-
-.preview-actions button span {
-  max-width: 92px;
-  line-height: 1.35;
 }
 
 .desktop-options {
@@ -960,6 +1008,12 @@ a:focus-visible {
 .range-row input {
   width: 180px;
   accent-color: var(--accent);
+}
+
+.range-row small {
+  margin-left: 4px;
+  color: var(--faint);
+  font-size: 10px;
 }
 
 .settings-note {
@@ -1073,7 +1127,7 @@ a:focus-visible {
 
 .achievement-card {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   border: 1px solid var(--border);
@@ -1081,6 +1135,29 @@ a:focus-visible {
   padding: 15px;
   background: color-mix(in srgb, var(--surface) 78%, transparent);
   box-shadow: 0 5px 18px rgb(0 0 0 / 3%);
+}
+
+.achievement-image {
+  width: 56px;
+  height: 56px;
+  grid-row: 1 / span 2;
+  border-radius: 16px;
+  object-fit: cover;
+  opacity: 0.56;
+  filter: grayscale(0.72) saturate(0.5);
+  transition:
+    filter 240ms ease,
+    opacity 240ms ease,
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.achievement-card.is-unlocked .achievement-image {
+  opacity: 1;
+  filter: none;
+}
+
+.achievement-card:hover .achievement-image {
+  transform: scale(1.04);
 }
 
 .achievement-card.is-unlocked {
@@ -1652,7 +1729,6 @@ body:has(.notes-page) {
     padding: 42px 20px 106px;
   }
 
-  .preview-actions,
   .desktop-actions {
     grid-template-columns: 1fr;
   }

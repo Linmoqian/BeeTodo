@@ -73,12 +73,15 @@ export function FocusWindow() {
   const liveMs = activeTodo?.timerStartedAt
     ? activeTodo.elapsedMs + now - activeTodo.timerStartedAt
     : activeTodo?.elapsedMs ?? 0;
+  const surfaceOpacity = Math.max(0, 100 - settings.compactOpacity);
+  const blurRadius = Math.max(3, 24 - settings.compactOpacity * 0.2);
 
   return (
     <motion.main
       className="focus-window"
       style={{
-        background: `color-mix(in srgb, var(--surface-solid) ${settings.compactOpacity}%, transparent)`,
+        background: `color-mix(in srgb, var(--surface-solid) ${surfaceOpacity}%, transparent)`,
+        backdropFilter: `blur(${blurRadius}px) saturate(150%)`,
       }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}

@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Check,
-  ExternalLink,
   Monitor,
   Palette,
   Settings,
@@ -60,20 +59,6 @@ export function ThemeSettings({
     const enabled = !settings.petEnabled;
     await save("set_pet_enabled", { enabled }, { petEnabled: enabled });
     await (enabled ? openPetWindow() : closePetWindow());
-  };
-
-  const openWidgetPreview = (view: "focus" | "pet") => {
-    if (isTauriRuntime()) {
-      void (view === "focus" ? openFocusWindow() : openPetWindow());
-      return;
-    }
-    const dimensions =
-      view === "focus" ? "width=520,height=260" : "width=360,height=360";
-    window.open(
-      `${window.location.origin}${window.location.pathname}#/${view}`,
-      `beetodo-${view}`,
-      `popup,${dimensions}`,
-    );
   };
 
   return (
@@ -162,13 +147,13 @@ export function ThemeSettings({
                   <Monitor size={16} />
                   <span>桌面</span>
                 </div>
-                {isTauriRuntime() ? (
+                {isTauriRuntime() && (
                   <div className="desktop-actions">
                     <button className="action-row" onClick={() => void openQuickNoteWindow()}>
                       <span>快捷便签</span>
                       <StickyNote size={15} />
                     </button>
-                    <button className="action-row" onClick={() => openWidgetPreview("focus")}>
+                    <button className="action-row" onClick={() => void openFocusWindow()}>
                       <span>打开专注磁贴</span>
                       <TimerReset size={15} />
                     </button>
@@ -188,21 +173,6 @@ export function ThemeSettings({
                     <button className="switch-row" onClick={() => void togglePet()}>
                       <span>蜜蜂桌宠</span>
                       <span className={`switch ${settings.petEnabled ? "is-on" : ""}`} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="preview-actions">
-                    <button onClick={() => void openQuickNoteWindow()}>
-                      <span>预览快捷便签</span>
-                      <ExternalLink size={14} />
-                    </button>
-                    <button onClick={() => openWidgetPreview("focus")}>
-                      <span>预览专注磁贴</span>
-                      <ExternalLink size={14} />
-                    </button>
-                    <button onClick={() => openWidgetPreview("pet")}>
-                      <span>预览桌宠</span>
-                      <ExternalLink size={14} />
                     </button>
                   </div>
                 )}
@@ -247,7 +217,7 @@ export function ThemeSettings({
                   </label>
                   {shortcutError && <p className="settings-error">{shortcutError}</p>}
                   <label className="range-row">
-                    <span>磁贴透明度</span>
+                    <span>磁贴透明度 <small>{settings.compactOpacity}%</small></span>
                     <input
                       type="range"
                       min="20"

@@ -4,7 +4,12 @@ import { motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { isTauriRuntime, readLocalNotes } from "../lib/platform";
+import {
+  DEFAULT_SETTINGS,
+  getAppSettings,
+  isTauriRuntime,
+  readLocalNotes,
+} from "../lib/platform";
 import type { StudyNote } from "../types";
 
 interface NoteTileWindowProps {
@@ -14,10 +19,12 @@ interface NoteTileWindowProps {
 export function NoteTileWindow({ noteId }: NoteTileWindowProps) {
   const [note, setNote] = useState<StudyNote | null>(null);
   const [copied, setCopied] = useState(false);
+  const [transparency, setTransparency] = useState(DEFAULT_SETTINGS.compactOpacity);
 
   useEffect(() => {
     const refresh = () => {
       setNote(readLocalNotes().find((item) => item.id === noteId) ?? null);
+      void getAppSettings().then((settings) => setTransparency(settings.compactOpacity));
     };
     refresh();
     const interval = window.setInterval(refresh, 600);
@@ -35,6 +42,8 @@ export function NoteTileWindow({ noteId }: NoteTileWindowProps) {
       window.close();
     }
   };
+  const surfaceOpacity = Math.max(0, 100 - transparency);
+  const blurRadius = Math.max(3, 26 - transparency * 0.22);
 
   const copy = async () => {
     if (!note) return;
@@ -46,6 +55,10 @@ export function NoteTileWindow({ noteId }: NoteTileWindowProps) {
   return (
     <motion.main
       className="note-tile-window"
+      style={{
+        background: `color-mix(in srgb, var(--surface-solid) ${surfaceOpacity}%, transparent)`,
+        backdropFilter: `blur(${blurRadius}px) saturate(150%)`,
+      }}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
     >

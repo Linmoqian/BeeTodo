@@ -1,14 +1,5 @@
 import { motion } from "motion/react";
-import {
-  Award,
-  BookOpen,
-  CheckCircle2,
-  Clock3,
-  Coffee,
-  QrCode,
-  Sparkles,
-  Trophy,
-} from "lucide-react";
+import { Coffee, QrCode, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useNotes } from "../hooks/useNotes";
 import type { Todo } from "../types";
@@ -24,7 +15,7 @@ interface Achievement {
   current: number;
   target: number;
   unit: string;
-  icon: typeof Trophy;
+  image: string;
 }
 
 function formatFocusMinutes(milliseconds: number) {
@@ -36,13 +27,27 @@ export function AchievementsPage({ todos, totalMs }: AchievementsPageProps) {
   const [qrMissing, setQrMissing] = useState(false);
   const completedCount = todos.filter((todo) => todo.completed).length;
   const focusMinutes = formatFocusMinutes(totalMs);
+  const balancedProgress = [completedCount >= 10, focusMinutes >= 300, notes.length >= 10]
+    .filter(Boolean).length;
+  const legendProgress = [completedCount >= 100, focusMinutes >= 3000, notes.length >= 100]
+    .filter(Boolean).length;
   const achievements: Achievement[] = [
-    { title: "第一步", description: "完成第一个任务", current: completedCount, target: 1, unit: "项", icon: CheckCircle2 },
-    { title: "稳定前进", description: "累计完成 5 个任务", current: completedCount, target: 5, unit: "项", icon: Sparkles },
-    { title: "一个番茄钟", description: "累计专注 25 分钟", current: focusMinutes, target: 25, unit: "分钟", icon: Clock3 },
-    { title: "深度工作", description: "累计专注 120 分钟", current: focusMinutes, target: 120, unit: "分钟", icon: Award },
-    { title: "知识种子", description: "写下第一篇学习便签", current: notes.length, target: 1, unit: "篇", icon: BookOpen },
-    { title: "知识花园", description: "积累 10 篇学习便签", current: notes.length, target: 10, unit: "篇", icon: Trophy },
+    { title: "第一步", description: "完成第一个任务", current: completedCount, target: 1, unit: "项", image: "/achievements/first-step.png" },
+    { title: "稳定前进", description: "累计完成 5 个任务", current: completedCount, target: 5, unit: "项", image: "/achievements/steady-progress.png" },
+    { title: "行动力", description: "累计完成 20 个任务", current: completedCount, target: 20, unit: "项", image: "/achievements/momentum.png" },
+    { title: "百事可成", description: "累计完成 100 个任务", current: completedCount, target: 100, unit: "项", image: "/achievements/master-completer.png" },
+    { title: "一个番茄钟", description: "累计专注 25 分钟", current: focusMinutes, target: 25, unit: "分钟", image: "/achievements/first-pomodoro.png" },
+    { title: "沉浸一刻", description: "累计专注 120 分钟", current: focusMinutes, target: 120, unit: "分钟", image: "/achievements/hourglass-focus.png" },
+    { title: "深度工作", description: "累计专注 600 分钟", current: focusMinutes, target: 600, unit: "分钟", image: "/achievements/deep-work.png" },
+    { title: "时间大师", description: "累计专注 3000 分钟", current: focusMinutes, target: 3000, unit: "分钟", image: "/achievements/time-master.png" },
+    { title: "知识种子", description: "写下第一篇学习便签", current: notes.length, target: 1, unit: "篇", image: "/achievements/knowledge-seed.png" },
+    { title: "知识花园", description: "积累 10 篇学习便签", current: notes.length, target: 10, unit: "篇", image: "/achievements/knowledge-garden.png" },
+    { title: "个人书库", description: "积累 50 篇学习便签", current: notes.length, target: 50, unit: "篇", image: "/achievements/library.png" },
+    { title: "博学者", description: "积累 100 篇学习便签", current: notes.length, target: 100, unit: "篇", image: "/achievements/scholar.png" },
+    { title: "清单启程", description: "创建第一个任务", current: todos.length, target: 1, unit: "项", image: "/achievements/task-starter.png" },
+    { title: "井然有序", description: "创建 20 个任务", current: todos.length, target: 20, unit: "项", image: "/achievements/task-organizer.png" },
+    { title: "均衡成长", description: "任务、专注和便签各达一阶目标", current: balancedProgress, target: 3, unit: "项", image: "/achievements/balanced-growth.png" },
+    { title: "Bee 传奇", description: "任务、专注和便签全部达到最高目标", current: legendProgress, target: 3, unit: "项", image: "/achievements/bee-legend.png" },
   ];
   const unlockedCount = achievements.filter((item) => item.current >= item.target).length;
 
@@ -70,7 +75,6 @@ export function AchievementsPage({ todos, totalMs }: AchievementsPageProps) {
         {achievements.map((achievement, index) => {
           const unlocked = achievement.current >= achievement.target;
           const progress = Math.min(100, (achievement.current / achievement.target) * 100);
-          const Icon = achievement.icon;
           return (
             <motion.article
               key={achievement.title}
@@ -80,7 +84,7 @@ export function AchievementsPage({ todos, totalMs }: AchievementsPageProps) {
               transition={{ delay: index * 0.045, duration: 0.28 }}
               whileHover={{ y: -3 }}
             >
-              <span className="achievement-icon"><Icon size={18} /></span>
+              <img className="achievement-image" src={achievement.image} alt="" />
               <div>
                 <strong>{achievement.title}</strong>
                 <p>{achievement.description}</p>
