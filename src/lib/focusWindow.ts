@@ -3,14 +3,41 @@ import { isTauriRuntime } from "./platform";
 
 const FOCUS_WINDOW_LABEL = "focus";
 
+async function getWindow(label: string) {
+  return (await getAllWebviewWindows()).find((window) => window.label === label);
+}
+
+async function hideMainWindow() {
+  const mainWindow = await getWindow("main");
+  await mainWindow?.hide();
+}
+
+export async function restoreMainWindow() {
+  if (!isTauriRuntime()) return;
+  const mainWindow = await getWindow("main");
+  if (!mainWindow) return;
+  await mainWindow.unminimize();
+  await mainWindow.show();
+  await mainWindow.setFocus();
+}
+
+export async function exitFocusMode() {
+  if (!isTauriRuntime()) {
+    window.location.hash = "/";
+    return;
+  }
+
+  await restoreMainWindow();
+  await (await getWindow(FOCUS_WINDOW_LABEL))?.close();
+}
+
 export async function openFocusWindow() {
   if (!isTauriRuntime()) return;
-  const existing = (await getAllWebviewWindows()).find(
-    (window) => window.label === FOCUS_WINDOW_LABEL,
-  );
+  const existing = await getWindow(FOCUS_WINDOW_LABEL);
   if (existing) {
     await existing.show();
     await existing.setFocus();
+    await hideMainWindow();
     return;
   }
 
@@ -18,7 +45,7 @@ export async function openFocusWindow() {
     url: "index.html#/focus",
     title: "专注磁贴",
     width: 380,
-    height: 116,
+    height: 126,
     decorations: false,
     transparent: true,
     resizable: false,
@@ -31,5 +58,8 @@ export async function openFocusWindow() {
 
   focusWindow.once("tauri://error", (event) => {
     console.error("Failed to create focus window", event.payload);
+  });
+  focusWindow.once("tauri://created", () => {
+    void hideMainWindow();
   });
 }

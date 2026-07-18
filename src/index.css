@@ -1854,7 +1854,7 @@ html.web-widget-preview #root {
   display: grid;
   width: 100%;
   height: 100%;
-  grid-template-columns: 42px minmax(0, 1fr) 36px;
+  grid-template-columns: 42px minmax(0, 1fr) 34px;
   align-items: center;
   gap: 12px;
   border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
@@ -1867,7 +1867,7 @@ html.web-widget-preview #root {
 
 .web-widget-preview .focus-window {
   width: min(420px, calc(100vw - 32px));
-  height: 112px;
+  height: 124px;
 }
 
 .focus-window-icon {
@@ -1903,7 +1903,16 @@ html.web-widget-preview #root {
   letter-spacing: 0.03em;
 }
 
-.focus-window > button {
+.focus-window-actions {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.focus-window-actions button {
   display: grid;
   width: 34px;
   height: 34px;
@@ -1913,7 +1922,13 @@ html.web-widget-preview #root {
   background: var(--primary);
 }
 
-.focus-window > button:disabled {
+.focus-window-actions button:first-child {
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+}
+
+.focus-window-actions button:disabled {
   color: var(--faint);
   cursor: default;
   background: var(--surface-muted);
