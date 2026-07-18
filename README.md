@@ -26,6 +26,12 @@ Web 模式使用同源 `localStorage` 同步任务、笔记、计时和设置，
 5. 成就系统：通过 16 枚独立徽章记录任务、专注和学习便签进度。
 6. 蜜蜂桌面宠物：可独立显示与交互的桌宠窗口。
 
+## 版本更新与发布
+
+设置页启动时会读取 [BeeTodo 最新 GitHub Release](https://github.com/Linmoqian/BeeTodo/releases/latest)，比较桌面包内版本，并按操作系统与 CPU 架构匹配安装包。发现新版本后，用户可打开官方安装资源；如果当前 Release 没有兼容资源，则只显示发布页，不会推荐其他平台的安装包。Web 开发模式无法读取桌面包版本，因此仅用于预览最新版本和资源匹配结果。
+
+当前流程不会在应用内静默安装。若后续启用 Tauri 签名更新，需要配置 updater 插件、公开签名公钥、`createUpdaterArtifacts`、`latest.json`，并在 GitHub Actions Secrets 中保存 `TAURI_SIGNING_PRIVATE_KEY` 及其密码；私钥不得写入仓库。
+
 赞助页面会读取 `public/wechat-qr.png` 作为微信二维码；未提供图片时显示缺图提示，不影响其他功能。
 
 学习便签位于 `#/notes`。Web 开发阶段使用 `localStorage` 自动保存，桌面端后续可在不改动页面组件的前提下替换持久化适配器。便签交互参考了 MIT 许可的 [Floral Notepaper](https://github.com/Achilng/floral-notepaper)，许可说明见 `THIRD_PARTY_NOTICES.md`。

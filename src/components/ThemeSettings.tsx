@@ -5,6 +5,7 @@ import {
   Check,
   Monitor,
   Palette,
+  RefreshCw,
   Settings,
   StickyNote,
   TimerReset,
@@ -22,6 +23,7 @@ import {
 import { closePetWindow, openPetWindow } from "../lib/petWindow";
 import { openFocusWindow } from "../lib/focusWindow";
 import { openQuickNoteWindow } from "../lib/noteWindows";
+import { UpdateSettings } from "./UpdateSettings";
 
 interface ThemeSettingsProps {
   onOpacityChange?: (value: number) => void;
@@ -238,6 +240,14 @@ export function ThemeSettings({
                     />
                   </label>
                 </div>
+              </div>
+
+              <div className="settings-group">
+                <div className="settings-label">
+                  <RefreshCw size={16} />
+                  <span>版本更新</span>
+                </div>
+                <UpdateSettings />
               </div>
               </motion.section>
             </motion.div>

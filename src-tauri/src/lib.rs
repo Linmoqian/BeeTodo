@@ -103,6 +103,14 @@ struct AppState {
     store_path: PathBuf,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AppRuntimeInfo {
+    version: String,
+    os: &'static str,
+    arch: &'static str,
+}
+
 fn now_ms() -> u64 {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
         Ok(duration) => duration.as_millis() as u64,
@@ -150,6 +158,15 @@ fn persist_store(path: &Path, store: &TodoStore) -> Result<(), String> {
 fn list_todos(state: State<'_, AppState>) -> Result<Vec<Todo>, String> {
     let store = state.store.lock().map_err(|err| err.to_string())?;
     Ok(store.todos.clone())
+}
+
+#[tauri::command]
+fn get_app_runtime_info(app: AppHandle) -> AppRuntimeInfo {
+    AppRuntimeInfo {
+        version: app.package_info().version.to_string(),
+        os: std::env::consts::OS,
+        arch: std::env::consts::ARCH,
+    }
 }
 
 #[tauri::command]
@@ -573,6 +590,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             list_todos,
+            get_app_runtime_info,
             add_todo,
             update_todo_text,
             remove_todo,

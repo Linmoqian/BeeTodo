@@ -1092,6 +1092,73 @@ a:focus-visible {
   font-size: 10px;
 }
 
+.update-settings {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 11px 10px 14px;
+  background: color-mix(in srgb, var(--surface-muted) 44%, transparent);
+}
+
+.update-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.update-copy strong {
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.update-copy span {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.update-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.update-download,
+.update-release-link {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  border-radius: 10px;
+  padding: 0 10px;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  font-size: 10px;
+  font-weight: 620;
+}
+
+.update-release-link {
+  color: var(--foreground);
+  background: var(--surface-muted);
+}
+
+.is-spinning {
+  animation: update-spin 900ms linear infinite;
+}
+
+@keyframes update-spin {
+  to { transform: rotate(360deg); }
+}
+
 .settings-note {
   margin: 0;
   border-radius: 12px;
