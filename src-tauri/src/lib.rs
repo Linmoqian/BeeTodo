@@ -492,7 +492,7 @@ fn toggle_note_tile(app: AppHandle, note_id: String) -> Result<bool, String> {
         return Ok(false);
     }
 
-    WebviewWindowBuilder::new(
+    let window = WebviewWindowBuilder::new(
         &app,
         &label,
         WebviewUrl::App(format!("index.html#/note-tile/{note_id}").into()),
@@ -510,6 +510,11 @@ fn toggle_note_tile(app: AppHandle, note_id: String) -> Result<bool, String> {
     .center()
     .build()
     .map_err(|err| err.to_string())?;
+    window.show().map_err(|err| err.to_string())?;
+    window
+        .set_always_on_top(true)
+        .map_err(|err| err.to_string())?;
+    window.set_focus().map_err(|err| err.to_string())?;
     Ok(true)
 }
 

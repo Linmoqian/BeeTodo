@@ -23,23 +23,14 @@ interface AppShellProps {
 export function AppShell({ children, onSettingsChange }: AppShellProps) {
   const startWindowDrag = (event: MouseEvent<HTMLDivElement>) => {
     if (!isTauriRuntime() || event.button !== 0) return;
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
-    if (
-      target.closest(
-        "button, input, textarea, a, nav, [contenteditable='true'], .todo-row, .notes-workspace, .settings-sheet",
-      )
-    ) {
-      return;
-    }
     void getCurrentWindow().startDragging();
   };
 
   return (
-    <div className="app-shell" onMouseDown={startWindowDrag}>
+    <div className="app-shell">
       <aside className="sidebar">
         <WindowControls />
-        <div className="brand-mark" aria-label="BeeTodo">
+        <div className="brand-mark" aria-label="BeeTodo" onMouseDown={startWindowDrag}>
           <span><ListTodo size={18} strokeWidth={2.3} /></span>
           <strong>BeeTodo</strong>
         </div>
