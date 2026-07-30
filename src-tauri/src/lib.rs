@@ -366,6 +366,14 @@ fn set_always_on_top(
 }
 
 #[tauri::command]
+fn set_compact_opacity(state: State<'_, AppState>, opacity: u8) -> Result<AppSettings, String> {
+    let mut store = state.store.lock().map_err(|err| err.to_string())?;
+    store.settings.compact_opacity = opacity.min(100);
+    persist_store(&state.store_path, &store)?;
+    Ok(store.settings.clone())
+}
+
+#[tauri::command]
 fn set_pet_enabled(state: State<'_, AppState>, enabled: bool) -> Result<AppSettings, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     store.settings.pet_enabled = enabled;
@@ -604,6 +612,7 @@ pub fn run() {
             pin_todo_top,
             get_settings,
             set_always_on_top,
+            set_compact_opacity,
             set_pet_enabled,
             set_user_name,
             set_pet_name,

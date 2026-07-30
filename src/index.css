@@ -897,11 +897,16 @@ a:focus-visible {
   width: min(580px, 100%);
   max-height: min(720px, calc(100vh - 40px));
   overflow: auto;
+  scrollbar-width: none;
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 24px;
   background: var(--surface-solid);
   box-shadow: 0 28px 90px rgb(0 0 0 / 22%);
+}
+
+.settings-sheet::-webkit-scrollbar {
+  display: none;
 }
 
 .settings-sheet > header {
@@ -934,7 +939,8 @@ a:focus-visible {
 }
 
 .field-row,
-.switch-row {
+.switch-row,
+.range-row {
   display: flex;
   min-height: 44px;
   align-items: center;
@@ -1042,6 +1048,10 @@ a:focus-visible {
   background: color-mix(in srgb, var(--surface-muted) 44%, transparent);
 }
 
+.desktop-options .field-row {
+  border-bottom: 1px solid var(--border);
+}
+
 .desktop-options .settings-error {
   margin: -5px 0 8px;
 }
@@ -1074,6 +1084,17 @@ a:focus-visible {
 
 .switch.is-on::after {
   transform: translateX(16px);
+}
+
+.range-row input {
+  width: 180px;
+  accent-color: var(--accent);
+}
+
+.range-row small {
+  margin-left: 4px;
+  color: var(--faint);
+  font-size: 10px;
 }
 
 .update-settings {
