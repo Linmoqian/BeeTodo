@@ -12,6 +12,7 @@ use tauri::{
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
+const MAIN_WINDOW_LABEL: &str = "main";
 const QUICK_NOTE_WINDOW_LABEL: &str = "quick-note";
 const TRAY_SHOW_MAIN_ID: &str = "show-main";
 const TRAY_QUICK_NOTE_ID: &str = "quick-note";
@@ -347,24 +348,19 @@ fn get_settings(state: State<'_, AppState>) -> Result<AppSettings, String> {
 
 #[tauri::command]
 fn set_always_on_top(
+    app: AppHandle,
     state: State<'_, AppState>,
-    window: tauri::Window,
     enabled: bool,
 ) -> Result<AppSettings, String> {
+    let window = app
+        .get_webview_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| "主窗口不存在".to_string())?;
     window
         .set_always_on_top(enabled)
         .map_err(|err| err.to_string())?;
 
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     store.settings.always_on_top = enabled;
-    persist_store(&state.store_path, &store)?;
-    Ok(store.settings.clone())
-}
-
-#[tauri::command]
-fn set_compact_opacity(state: State<'_, AppState>, opacity: u8) -> Result<AppSettings, String> {
-    let mut store = state.store.lock().map_err(|err| err.to_string())?;
-    store.settings.compact_opacity = opacity.min(100);
     persist_store(&state.store_path, &store)?;
     Ok(store.settings.clone())
 }
@@ -430,7 +426,7 @@ fn set_quick_note_shortcut(
 
 fn show_main_window(app: &AppHandle) -> Result<(), String> {
     let window = app
-        .get_webview_window("main")
+        .get_webview_window(MAIN_WINDOW_LABEL)
         .ok_or_else(|| "主窗口不存在".to_string())?;
     window.unminimize().map_err(|err| err.to_string())?;
     window.show().map_err(|err| err.to_string())?;
@@ -514,6 +510,7 @@ fn toggle_note_tile(app: AppHandle, note_id: String) -> Result<bool, String> {
     window
         .set_always_on_top(true)
         .map_err(|err| err.to_string())?;
+    #[cfg(target_os = "windows")]
     window.set_focus().map_err(|err| err.to_string())?;
     Ok(true)
 }
@@ -575,7 +572,7 @@ pub fn run() {
                 store: Mutex::new(store),
                 store_path,
             });
-            if let Some(window) = app.get_webview_window("main") {
+            if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
                 let _ = window.set_always_on_top(always_on_top);
             }
             setup_tray(app)?;
@@ -586,7 +583,7 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == "main" {
+                if window.label() == MAIN_WINDOW_LABEL {
                     api.prevent_close();
                     let _ = window.hide();
                 }
@@ -607,7 +604,6 @@ pub fn run() {
             pin_todo_top,
             get_settings,
             set_always_on_top,
-            set_compact_opacity,
             set_pet_enabled,
             set_user_name,
             set_pet_name,

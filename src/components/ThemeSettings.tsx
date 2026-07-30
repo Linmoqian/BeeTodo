@@ -26,14 +26,10 @@ import { openQuickNoteWindow } from "../lib/noteWindows";
 import { UpdateSettings } from "./UpdateSettings";
 
 interface ThemeSettingsProps {
-  onOpacityChange?: (value: number) => void;
   onSettingsChange?: (settings: AppSettings) => void;
 }
 
-export function ThemeSettings({
-  onOpacityChange,
-  onSettingsChange,
-}: ThemeSettingsProps) {
+export function ThemeSettings({ onSettingsChange }: ThemeSettingsProps) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
@@ -218,27 +214,6 @@ export function ThemeSettings({
                     />
                   </label>
                   {shortcutError && <p className="settings-error">{shortcutError}</p>}
-                  <label className="range-row">
-                    <span>磁贴透明度 <small>{settings.compactOpacity}%</small></span>
-                    <input
-                      type="range"
-                      min="20"
-                      max="100"
-                      value={settings.compactOpacity}
-                      onChange={(event) => {
-                        const compactOpacity = Number(event.target.value);
-                        setSettings((current) => ({ ...current, compactOpacity }));
-                        onOpacityChange?.(compactOpacity);
-                      }}
-                      onMouseUp={() =>
-                        void save(
-                          "set_compact_opacity",
-                          { opacity: settings.compactOpacity },
-                          { compactOpacity: settings.compactOpacity },
-                        )
-                      }
-                    />
-                  </label>
                 </div>
               </div>
 
