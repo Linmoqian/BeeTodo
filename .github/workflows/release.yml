@@ -51,12 +51,12 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'BeeTODO ${{ github.ref_name }}'
           releaseBody: |
-            BeeTODO 0.2.1 补丁版：
+            BeeTODO 0.2.2 补丁版：
 
-            1. 修复 Windows 创建学习便签后主窗口设置、关闭和最小化控件失效的问题。
-            2. 修复学习便签桌面磁贴置顶无效果的问题，并隔离不同窗口的置顶状态。
-            3. 兼容 macOS、Windows 和其他桌面系统的窗口焦点行为。
-            4. 隐藏设置面板右侧滚动条，保留透明度调节和滚动能力。
+            1. 修复 Windows 和 macOS 无边框主窗口无法拖动的问题。
+            2. 兼容旧版 Tauri 拖拽机制，避免点击文字或图标时拖拽失效。
+            3. 默认关闭主窗口置顶，并迁移旧版本遗留的置顶状态。
+            4. 保留设置面板透明度调节，同时隐藏右侧滚动条。
 
             支持平台：Windows 11、macOS（Apple Silicon 与 Intel）。
           releaseDraft: false
