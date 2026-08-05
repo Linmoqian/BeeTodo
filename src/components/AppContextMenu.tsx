@@ -28,6 +28,7 @@ export function AppContextMenu() {
 
   useEffect(() => {
     const openMenu = (event: MouseEvent) => {
+      if (event.target instanceof Element && event.target.closest(".todo-row")) return;
       event.preventDefault();
       setPosition({
         x: Math.max(8, Math.min(event.clientX, window.innerWidth - MENU_WIDTH - 8)),

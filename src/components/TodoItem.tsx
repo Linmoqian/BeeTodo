@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "motion/react";
@@ -60,6 +61,7 @@ export function TodoItem({
   onPinTop,
 }: TodoItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState(todo.text);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -67,12 +69,18 @@ export function TodoItem({
     useSortable({ id: todo.id });
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !contextMenuOpen) return;
     const closeMenu = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+        setContextMenuOpen(false);
+      }
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        setContextMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", closeMenu);
     document.addEventListener("keydown", closeOnEscape);
@@ -80,7 +88,7 @@ export function TodoItem({
       document.removeEventListener("mousedown", closeMenu);
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [menuOpen]);
+  }, [contextMenuOpen, menuOpen]);
 
   const toggleTimer = () => {
     if (todo.completed) return;
@@ -90,7 +98,21 @@ export function TodoItem({
   const startEditing = () => {
     setDraftText(todo.text);
     setMenuOpen(false);
+    setContextMenuOpen(false);
     setEditing(true);
+  };
+
+  const setColor = (color: TodoColor) => {
+    void onSetColor(todo.id, color);
+    setMenuOpen(false);
+    setContextMenuOpen(false);
+  };
+
+  const openContextMenu = (event: ReactMouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setMenuOpen(false);
+    setContextMenuOpen(true);
   };
 
   const saveText = () => {
@@ -103,6 +125,7 @@ export function TodoItem({
   return (
     <motion.article
       ref={setNodeRef}
+      onContextMenu={openContextMenu}
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -110,7 +133,9 @@ export function TodoItem({
       transition={{ duration: 0.2 }}
       className={`todo-row todo-${todo.color} ${isActive ? "is-active" : ""} ${
         isDragging ? "is-dragging" : ""
-      } ${dropPosition ? `drop-${dropPosition}` : ""} ${menuOpen ? "has-open-menu" : ""}`}
+      } ${dropPosition ? `drop-${dropPosition}` : ""} ${
+        menuOpen || contextMenuOpen ? "has-open-menu" : ""
+      }`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
       <button
@@ -207,14 +232,61 @@ export function TodoItem({
                     }`}
                     title={color.label}
                     aria-label={`设为${color.label}`}
-                    onClick={() => {
-                      void onSetColor(todo.id, color.value);
-                      setMenuOpen(false);
-                    }}
+                    onClick={() => setColor(color.value)}
                   />
                 ))}
               </div>
               <button className="danger" onClick={() => void onRemove(todo.id)}>
+                <Trash2 size={14} /> 删除
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {contextMenuOpen && (
+            <motion.div
+              className="todo-context-menu"
+              role="menu"
+              aria-label="待办自定义菜单"
+              initial={{ opacity: 0, scale: 0.96, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -4 }}
+            >
+              <span className="todo-context-label">颜色</span>
+              <div className="color-options" aria-label="任务颜色">
+                {COLORS.map((color) => (
+                  <button
+                    key={color.value}
+                    className={`color-dot color-${color.value} ${
+                      todo.color === color.value ? "is-selected" : ""
+                    }`}
+                    title={color.label}
+                    aria-label={`设为${color.label}`}
+                    onClick={() => setColor(color.value)}
+                  />
+                ))}
+              </div>
+              <button
+                className="todo-context-action"
+                type="button"
+                onClick={() => {
+                  void onPinTop(todo.id);
+                  setContextMenuOpen(false);
+                }}
+              >
+                <Pin size={14} /> 置顶
+              </button>
+              <button className="todo-context-action" type="button" onClick={startEditing}>
+                <Pencil size={14} /> 重命名
+              </button>
+              <button
+                className="todo-context-action danger"
+                type="button"
+                onClick={() => {
+                  void onRemove(todo.id);
+                  setContextMenuOpen(false);
+                }}
+              >
                 <Trash2 size={14} /> 删除
               </button>
             </motion.div>

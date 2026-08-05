@@ -790,6 +790,53 @@ a:focus-visible {
   color: var(--danger);
 }
 
+.todo-context-menu {
+  position: absolute;
+  z-index: 30;
+  top: 39px;
+  right: 0;
+  display: flex;
+  width: 170px;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 7px;
+  background: var(--surface-solid);
+  box-shadow: var(--shadow);
+}
+
+.todo-context-label {
+  padding: 2px 7px 3px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.todo-context-menu .color-options {
+  margin: 0 0 2px;
+  padding: 8px 4px;
+}
+
+.todo-context-action {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+}
+
+.todo-context-action:hover {
+  background: var(--surface-muted);
+}
+
+.todo-context-action.danger {
+  color: var(--danger);
+}
+
 .color-options {
   display: flex;
   justify-content: space-between;
