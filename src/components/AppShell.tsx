@@ -1,8 +1,9 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { BookOpenText, CalendarDays, CheckCircle2, ListTodo, NotebookPen, Trophy } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ThemeSettings } from "./ThemeSettings";
-import type { AppSettings } from "../lib/platform";
+import { isTauriRuntime, type AppSettings } from "../lib/platform";
 import { WindowControls } from "./WindowControls";
 import { AppContextMenu } from "./AppContextMenu";
 
@@ -20,13 +21,30 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, onSettingsChange }: AppShellProps) {
+  const startWindowDrag = (event: MouseEvent<HTMLDivElement>) => {
+    if (!isTauriRuntime() || event.button !== 0) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (
+      target.closest(
+        "button, input, textarea, select, a, label, nav, [contenteditable='true'], [role], .todo-row, .notes-workspace, .settings-sheet",
+      )
+    ) {
+      return;
+    }
+    event.preventDefault();
+    void getCurrentWindow().startDragging().catch((error) => {
+      console.error("Failed to start window dragging", error);
+    });
+  };
+
   return (
-    <div className="app-shell" data-tauri-drag-region="deep">
+    <div className="app-shell" data-tauri-drag-region="deep" onMouseDown={startWindowDrag}>
       <aside className="sidebar">
         <WindowControls />
-        <div className="brand-mark" aria-label="BeeTodo">
-          <span><ListTodo size={18} strokeWidth={2.3} /></span>
-          <strong>BeeTodo</strong>
+        <div className="brand-mark" aria-label="BeeTodo" data-tauri-drag-region>
+          <span data-tauri-drag-region><ListTodo size={18} strokeWidth={2.3} /></span>
+          <strong data-tauri-drag-region>BeeTodo</strong>
         </div>
 
         <nav aria-label="主要导航">

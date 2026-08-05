@@ -2223,7 +2223,7 @@ html.web-widget-preview #root {
   app-region: drag;
 }
 
-[data-tauri-drag-region] button {
+[data-tauri-drag-region] :is(a, button, input, textarea, select, label, [contenteditable="true"]) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }

@@ -13,6 +13,7 @@ use tauri::{
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 const MAIN_WINDOW_LABEL: &str = "main";
+const SETTINGS_VERSION: u8 = 1;
 const QUICK_NOTE_WINDOW_LABEL: &str = "quick-note";
 const TRAY_SHOW_MAIN_ID: &str = "show-main";
 const TRAY_QUICK_NOTE_ID: &str = "quick-note";
@@ -88,6 +89,8 @@ struct TodoStore {
     todos: Vec<Todo>,
     #[serde(default)]
     settings: AppSettings,
+    #[serde(default)]
+    settings_version: u8,
 }
 
 impl Default for TodoStore {
@@ -95,6 +98,7 @@ impl Default for TodoStore {
         Self {
             todos: Vec::new(),
             settings: AppSettings::default(),
+            settings_version: SETTINGS_VERSION,
         }
     }
 }
@@ -138,6 +142,7 @@ fn load_store(path: &Path) -> Result<TodoStore, String> {
             Ok(TodoStore {
                 todos: legacy_todos,
                 settings: AppSettings::default(),
+                settings_version: SETTINGS_VERSION,
             })
         }
     }
@@ -574,6 +579,12 @@ pub fn run() {
             let mut store_path = app.path().app_data_dir()?;
             store_path.push("todos.json");
             let store = load_store(&store_path)?;
+            let mut store = store;
+            if store.settings_version < SETTINGS_VERSION {
+                store.settings.always_on_top = false;
+                store.settings_version = SETTINGS_VERSION;
+                persist_store(&store_path, &store)?;
+            }
             let always_on_top = store.settings.always_on_top;
             let quick_note_shortcut = store.settings.quick_note_shortcut.clone();
             app.manage(AppState {
