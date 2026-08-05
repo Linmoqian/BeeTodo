@@ -2323,6 +2323,40 @@ html.desktop-main body {
   padding: 8px;
 }
 
+html.pin-control-view,
+html.pin-control-view body,
+html.pin-control-view #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent !important;
+}
+
+.pin-control-window {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background: transparent;
+}
+
+.pin-control-button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  border-radius: 50%;
+  color: #3b2c00;
+  background: var(--accent);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 26%);
+  cursor: pointer;
+}
+
+.pin-control-button:hover {
+  filter: brightness(1.06);
+}
+
 .desktop-main #root {
   height: 100%;
 }

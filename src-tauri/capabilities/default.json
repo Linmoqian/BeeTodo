@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for BeeTodo desktop windows",
-  "windows": ["main", "pet", "focus", "quick-note", "note-tile-*"],
+  "windows": ["main", "pet", "focus", "quick-note", "pin-control", "note-tile-*"],
   "permissions": [
     "core:default",
     "core:webview:allow-get-all-webviews",

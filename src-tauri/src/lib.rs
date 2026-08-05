@@ -15,6 +15,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 const MAIN_WINDOW_LABEL: &str = "main";
 const SETTINGS_VERSION: u8 = 1;
 const QUICK_NOTE_WINDOW_LABEL: &str = "quick-note";
+const PIN_CONTROL_WINDOW_LABEL: &str = "pin-control";
 const TRAY_SHOW_MAIN_ID: &str = "show-main";
 const TRAY_RESTORE_MAIN_ID: &str = "restore-main";
 const TRAY_QUICK_NOTE_ID: &str = "quick-note";
@@ -371,6 +372,92 @@ fn set_always_on_top(
     Ok(store.settings.clone())
 }
 
+fn pin_control_coordinates(
+    position: tauri::PhysicalPosition<i32>,
+    size: tauri::PhysicalSize<u32>,
+    scale_factor: f64,
+) -> (f64, f64) {
+    let pin_size = 44.0 * scale_factor;
+    let pin_bottom_offset = 72.0 * scale_factor;
+    let x = (f64::from(position.x) + (f64::from(size.width) - pin_size) / 2.0) / scale_factor;
+    let y = (f64::from(position.y) + f64::from(size.height) - pin_size - pin_bottom_offset)
+        / scale_factor;
+    (x, y)
+}
+
+fn set_pin_control_position(
+    pin_window: &tauri::WebviewWindow,
+    position: tauri::PhysicalPosition<i32>,
+    size: tauri::PhysicalSize<u32>,
+    scale_factor: f64,
+) -> Result<(), String> {
+    let (x, y) = pin_control_coordinates(position, size, scale_factor);
+    pin_window
+        .set_position(tauri::LogicalPosition::new(x, y))
+        .map_err(|err| err.to_string())
+}
+
+fn position_pin_control_window(
+    main_window: &tauri::WebviewWindow,
+    pin_window: &tauri::WebviewWindow,
+) -> Result<(), String> {
+    let position = main_window
+        .outer_position()
+        .map_err(|err| err.to_string())?;
+    let size = main_window.outer_size().map_err(|err| err.to_string())?;
+    let scale_factor = main_window.scale_factor().map_err(|err| err.to_string())?;
+    set_pin_control_position(pin_window, position, size, scale_factor)
+}
+
+fn open_pin_control_window(app: &AppHandle) -> Result<(), String> {
+    let main_window = app
+        .get_webview_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| "主窗口不存在".to_string())?;
+    let position = main_window
+        .outer_position()
+        .map_err(|err| err.to_string())?;
+    let size = main_window.outer_size().map_err(|err| err.to_string())?;
+    let scale_factor = main_window.scale_factor().map_err(|err| err.to_string())?;
+    let (x, y) = pin_control_coordinates(position, size, scale_factor);
+
+    if let Some(pin_window) = app.get_webview_window(PIN_CONTROL_WINDOW_LABEL) {
+        position_pin_control_window(&main_window, &pin_window)?;
+        pin_window.show().map_err(|err| err.to_string())?;
+        pin_window
+            .set_always_on_top(true)
+            .map_err(|err| err.to_string())?;
+        return Ok(());
+    }
+
+    WebviewWindowBuilder::new(
+        app,
+        PIN_CONTROL_WINDOW_LABEL,
+        WebviewUrl::App("index.html#/pin-control".into()),
+    )
+    .title("BeeTodo 固定控制")
+    .inner_size(44.0, 44.0)
+    .min_inner_size(44.0, 44.0)
+    .max_inner_size(44.0, 44.0)
+    .position(x, y)
+    .resizable(false)
+    .decorations(false)
+    .devtools(false)
+    .transparent(true)
+    .always_on_top(true)
+    .shadow(false)
+    .skip_taskbar(true)
+    .focused(false)
+    .build()
+    .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
+fn close_pin_control_window(app: &AppHandle) {
+    if let Some(pin_window) = app.get_webview_window(PIN_CONTROL_WINDOW_LABEL) {
+        let _ = pin_window.close();
+    }
+}
+
 fn set_main_click_through(app: &AppHandle, enabled: bool) -> Result<(), String> {
     let window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
@@ -387,6 +474,14 @@ fn set_main_click_through(app: &AppHandle, enabled: bool) -> Result<(), String> 
     window
         .set_ignore_cursor_events(enabled)
         .map_err(|err| err.to_string())?;
+    if enabled {
+        if let Err(error) = open_pin_control_window(app) {
+            let _ = window.set_ignore_cursor_events(false);
+            return Err(error);
+        }
+    } else {
+        close_pin_control_window(app);
+    }
     let _ = app.emit("click-through-changed", enabled);
     Ok(())
 }
@@ -640,11 +735,45 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == MAIN_WINDOW_LABEL {
+            if window.label() != MAIN_WINDOW_LABEL {
+                return;
+            }
+
+            match event {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
                     api.prevent_close();
+                    close_pin_control_window(window.app_handle());
                     let _ = window.hide();
                 }
+                tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
+                    if let Some(pin_window) = window
+                        .app_handle()
+                        .get_webview_window(PIN_CONTROL_WINDOW_LABEL)
+                    {
+                        let position = window.outer_position();
+                        let size = window.outer_size();
+                        if let (Ok(position), Ok(size)) = (position, size) {
+                            match window.scale_factor() {
+                                Ok(scale_factor) => {
+                                    if let Err(error) = set_pin_control_position(
+                                        &pin_window,
+                                        position,
+                                        size,
+                                        scale_factor,
+                                    ) {
+                                        eprintln!("同步固定钉子位置失败：{error}");
+                                    }
+                                }
+                                Err(error) => {
+                                    eprintln!("读取主窗口缩放比例失败：{error}");
+                                }
+                            }
+                        } else {
+                            eprintln!("读取主窗口位置失败，无法同步固定钉子");
+                        }
+                    }
+                }
+                _ => {}
             }
         })
         .plugin(tauri_plugin_opener::init())
