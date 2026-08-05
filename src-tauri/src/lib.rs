@@ -409,6 +409,20 @@ fn position_pin_control_window(
     set_pin_control_position(pin_window, position, size, scale_factor)
 }
 
+fn raise_pin_control_window(pin_window: &tauri::WebviewWindow) -> Result<(), String> {
+    pin_window
+        .set_ignore_cursor_events(false)
+        .map_err(|err| err.to_string())?;
+    pin_window
+        .set_focusable(true)
+        .map_err(|err| err.to_string())?;
+    pin_window
+        .set_always_on_top(true)
+        .map_err(|err| err.to_string())?;
+    pin_window.show().map_err(|err| err.to_string())?;
+    pin_window.set_focus().map_err(|err| err.to_string())
+}
+
 fn open_pin_control_window(app: &AppHandle) -> Result<(), String> {
     let main_window = app
         .get_webview_window(MAIN_WINDOW_LABEL)
@@ -422,10 +436,8 @@ fn open_pin_control_window(app: &AppHandle) -> Result<(), String> {
 
     if let Some(pin_window) = app.get_webview_window(PIN_CONTROL_WINDOW_LABEL) {
         position_pin_control_window(&main_window, &pin_window)?;
-        pin_window.show().map_err(|err| err.to_string())?;
-        pin_window
-            .set_always_on_top(true)
-            .map_err(|err| err.to_string())?;
+        raise_pin_control_window(&pin_window)?;
+        eprintln!("[click-through] 已提升现有固定钉子窗口");
         return Ok(());
     }
 
@@ -446,9 +458,14 @@ fn open_pin_control_window(app: &AppHandle) -> Result<(), String> {
     .always_on_top(true)
     .shadow(false)
     .skip_taskbar(true)
-    .focused(false)
+    .focusable(true)
+    .focused(true)
     .build()
     .map_err(|err| err.to_string())?;
+    if let Some(pin_window) = app.get_webview_window(PIN_CONTROL_WINDOW_LABEL) {
+        raise_pin_control_window(&pin_window)?;
+    }
+    eprintln!("[click-through] 已创建并提升固定钉子窗口");
     Ok(())
 }
 
@@ -474,13 +491,16 @@ fn set_main_click_through(app: &AppHandle, enabled: bool) -> Result<(), String> 
     window
         .set_ignore_cursor_events(enabled)
         .map_err(|err| err.to_string())?;
+    eprintln!("[click-through] 主窗口鼠标穿透={enabled}");
     if enabled {
         if let Err(error) = open_pin_control_window(app) {
             let _ = window.set_ignore_cursor_events(false);
+            eprintln!("[click-through] 创建固定钉子窗口失败：{error}");
             return Err(error);
         }
     } else {
         close_pin_control_window(app);
+        eprintln!("[click-through] 已关闭固定钉子窗口");
     }
     let _ = app.emit("click-through-changed", enabled);
     Ok(())
