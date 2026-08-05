@@ -51,12 +51,12 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'BeeTODO ${{ github.ref_name }}'
           releaseBody: |
-            BeeTODO 0.2.0 正式版：
+            BeeTODO 0.2.1 补丁版：
 
-            1. 优化 UI，采用现代、极简主义设计。
-            2. 添加成就系统，记录任务、专注与学习进度。
-            3. 添加便签功能，支持 Markdown 学习笔记与桌面磁贴。
-            4. 修复待办重命名后名称无法稳定保存的问题。
+            1. 修复 Windows 创建学习便签后主窗口设置、关闭和最小化控件失效的问题。
+            2. 修复学习便签桌面磁贴置顶无效果的问题，并隔离不同窗口的置顶状态。
+            3. 兼容 macOS、Windows 和其他桌面系统的窗口焦点行为。
+            4. 隐藏设置面板右侧滚动条，保留透明度调节和滚动能力。
 
             支持平台：Windows 11、macOS（Apple Silicon 与 Intel）。
           releaseDraft: false
