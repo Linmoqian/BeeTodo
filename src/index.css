@@ -2050,52 +2050,93 @@ body:has(.notes-page) {
 
 @media (max-width: 760px) and (orientation: landscape) {
   .main-content {
-    padding: 24px 22px 88px;
+    padding: 18px 22px 78px;
   }
 
   .page-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    flex-direction: row;
-    gap: 18px;
-    margin-bottom: 22px;
+    gap: 14px;
+    margin-bottom: 16px;
   }
 
   .page-header > div {
     min-width: 0;
   }
 
-  .page-header h1 {
-    max-width: 440px;
-    font-size: clamp(26px, 4.5vw, 36px);
+  .page-header .eyebrow,
+  .page-header p {
+    display: none;
   }
 
-  .page-header p {
-    margin-top: 8px;
-    font-size: 13px;
+  .page-header h1 {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: clamp(24px, 4vw, 30px);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .focus-time {
-    width: 180px;
-    min-width: 160px;
-    flex: 0 0 180px;
-    padding: 11px 12px;
-  }
-
-  .task-composer {
-    margin-bottom: 24px;
-  }
-
-  .todo-row {
-    min-height: 60px;
-    gap: 8px;
-    margin-bottom: 7px;
+    width: 138px;
+    min-width: 0;
+    height: 48px;
+    flex: 0 0 138px;
+    justify-content: center;
+    border-radius: 13px;
     padding: 8px 10px;
   }
 
-  .todo-row time {
-    display: block;
-    min-width: 43px;
-    font-size: 10px;
+  .focus-time > svg,
+  .focus-time span,
+  .focus-entry-icon {
+    display: none;
+  }
+
+  .focus-time strong {
+    font-size: 13px;
+  }
+
+  .task-composer {
+    min-height: 48px;
+    margin-bottom: 18px;
+    border-radius: 14px;
+    padding-left: 14px;
+  }
+
+  .task-composer input {
+    font-size: 14px;
+  }
+
+  .section-heading {
+    padding-bottom: 4px;
+  }
+
+  .section-heading h2 {
+    font-size: 13px;
+  }
+
+  .section-heading span,
+  .completion-note {
+    display: none;
+  }
+
+  .todo-row {
+    min-height: 54px;
+    gap: 7px;
+    margin-bottom: 6px;
+    border-radius: 13px;
+    padding: 7px 9px;
+  }
+
+  .todo-row time,
+  .todo-copy small {
+    display: none;
+  }
+
+  .todo-copy > span {
+    font-size: 13px;
   }
 
   .achievement-grid {
@@ -2117,7 +2158,7 @@ body:has(.notes-page) {
   .notes-workspace {
     height: calc(100vh - 118px);
     min-height: 0;
-    grid-template-columns: 190px minmax(0, 1fr);
+    grid-template-columns: 164px minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
   }
 
@@ -2132,7 +2173,11 @@ body:has(.notes-page) {
   }
 
   .notes-library-header strong {
-    font-size: 16px;
+    font-size: 15px;
+  }
+
+  .notes-library-header span {
+    display: none;
   }
 
   .note-list {
