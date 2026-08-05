@@ -8,7 +8,7 @@ use std::{
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder,
+    AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
@@ -16,6 +16,7 @@ const MAIN_WINDOW_LABEL: &str = "main";
 const SETTINGS_VERSION: u8 = 1;
 const QUICK_NOTE_WINDOW_LABEL: &str = "quick-note";
 const TRAY_SHOW_MAIN_ID: &str = "show-main";
+const TRAY_RESTORE_MAIN_ID: &str = "restore-main";
 const TRAY_QUICK_NOTE_ID: &str = "quick-note";
 const TRAY_QUIT_ID: &str = "quit";
 
@@ -370,6 +371,31 @@ fn set_always_on_top(
     Ok(store.settings.clone())
 }
 
+fn set_main_click_through(app: &AppHandle, enabled: bool) -> Result<(), String> {
+    let window = app
+        .get_webview_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| "主窗口不存在".to_string())?;
+    let configured_always_on_top = {
+        let state = app.state::<AppState>();
+        let store = state.store.lock().map_err(|err| err.to_string())?;
+        store.settings.always_on_top
+    };
+
+    window
+        .set_always_on_top(enabled || configured_always_on_top)
+        .map_err(|err| err.to_string())?;
+    window
+        .set_ignore_cursor_events(enabled)
+        .map_err(|err| err.to_string())?;
+    let _ = app.emit("click-through-changed", enabled);
+    Ok(())
+}
+
+#[tauri::command]
+fn set_click_through(app: AppHandle, enabled: bool) -> Result<(), String> {
+    set_main_click_through(&app, enabled)
+}
+
 #[tauri::command]
 fn set_compact_opacity(state: State<'_, AppState>, opacity: u8) -> Result<AppSettings, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
@@ -443,6 +469,7 @@ fn show_main_window(app: &AppHandle) -> Result<(), String> {
         .ok_or_else(|| "主窗口不存在".to_string())?;
     window.unminimize().map_err(|err| err.to_string())?;
     window.show().map_err(|err| err.to_string())?;
+    set_main_click_through(app, false)?;
     window.set_focus().map_err(|err| err.to_string())
 }
 
@@ -530,9 +557,16 @@ fn toggle_note_tile(app: AppHandle, note_id: String) -> Result<bool, String> {
 
 fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let show_main = MenuItem::with_id(app, TRAY_SHOW_MAIN_ID, "显示 BeeTodo", true, None::<&str>)?;
+    let restore_main = MenuItem::with_id(
+        app,
+        TRAY_RESTORE_MAIN_ID,
+        "恢复窗口交互",
+        true,
+        None::<&str>,
+    )?;
     let quick_note = MenuItem::with_id(app, TRAY_QUICK_NOTE_ID, "快捷便签", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, TRAY_QUIT_ID, "退出", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show_main, &quick_note, &quit])?;
+    let menu = Menu::with_items(app, &[&show_main, &restore_main, &quick_note, &quit])?;
 
     TrayIconBuilder::with_id("main-tray")
         .icon(app.default_window_icon().ok_or("缺少应用图标")?.clone())
@@ -543,6 +577,11 @@ fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             TRAY_SHOW_MAIN_ID => {
                 if let Err(error) = show_main_window(app) {
                     eprintln!("显示主窗口失败：{error}");
+                }
+            }
+            TRAY_RESTORE_MAIN_ID => {
+                if let Err(error) = set_main_click_through(app, false) {
+                    eprintln!("恢复窗口交互失败：{error}");
                 }
             }
             TRAY_QUICK_NOTE_ID => {
@@ -628,6 +667,7 @@ pub fn run() {
             set_user_name,
             set_pet_name,
             set_quick_note_shortcut,
+            set_click_through,
             open_quick_note_window,
             toggle_note_tile
         ])

@@ -1912,6 +1912,41 @@ body:has(.notes-page) {
   display: none;
 }
 
+.mobile-pin {
+  position: fixed;
+  z-index: 90;
+  right: 50%;
+  bottom: 70px;
+  display: none;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--surface-solid) 90%, transparent);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 14%);
+  backdrop-filter: blur(18px) saturate(150%);
+  transform: translateX(50%);
+  transition: 160ms ease;
+}
+
+.mobile-pin:hover {
+  color: var(--foreground);
+  background: var(--surface-solid);
+}
+
+.mobile-pin.is-active {
+  color: #3b2c00;
+  border-color: color-mix(in srgb, var(--accent) 54%, var(--border));
+  background: var(--accent);
+}
+
+html.is-click-through .app-shell {
+  opacity: 0.16;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     display: block;
@@ -2031,6 +2066,10 @@ body:has(.notes-page) {
     background: color-mix(in srgb, var(--surface-solid) 88%, transparent);
     box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
     backdrop-filter: blur(18px);
+  }
+
+  .mobile-pin {
+    display: grid;
   }
 
   .mobile-nav a {
@@ -2228,6 +2267,13 @@ body:has(.notes-page) {
     bottom: 10px;
     left: 12px;
     padding: 5px;
+  }
+
+  .mobile-pin {
+    right: 50%;
+    bottom: 62px;
+    width: 32px;
+    height: 32px;
   }
 
   .mobile-nav a {

@@ -6,6 +6,7 @@ import { ThemeSettings } from "./ThemeSettings";
 import { isTauriRuntime, type AppSettings } from "../lib/platform";
 import { WindowControls } from "./WindowControls";
 import { AppContextMenu } from "./AppContextMenu";
+import { MobilePin } from "./MobilePin";
 
 const NAV_ITEMS = [
   { to: "/", label: "今日", icon: CalendarDays, end: true },
@@ -72,6 +73,8 @@ export function AppShell({ children, onSettingsChange }: AppShellProps) {
       <div className="mobile-settings">
         <ThemeSettings onSettingsChange={onSettingsChange} />
       </div>
+
+      <MobilePin />
 
       <nav className="mobile-nav" aria-label="移动端导航">
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
