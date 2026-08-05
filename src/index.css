@@ -791,10 +791,8 @@ a:focus-visible {
 }
 
 .todo-context-menu {
-  position: absolute;
+  position: fixed;
   z-index: 30;
-  top: 39px;
-  right: 0;
   display: flex;
   width: 170px;
   flex-direction: column;

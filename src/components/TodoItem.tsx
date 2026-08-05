@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
+import { createPortal } from "react-dom";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "motion/react";
@@ -23,6 +24,10 @@ const COLORS: Array<{ value: TodoColor; label: string }> = [
   { value: "sky", label: "海蓝" },
   { value: "slate", label: "雾灰" },
 ];
+
+const CONTEXT_MENU_WIDTH = 170;
+const CONTEXT_MENU_HEIGHT = 250;
+const CONTEXT_MENU_OFFSET = 8;
 
 function formatTime(ms: number): string {
   const seconds = Math.floor(ms / 1000);
@@ -62,24 +67,31 @@ export function TodoItem({
 }: TodoItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState(todo.text);
   const menuRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: todo.id });
 
   useEffect(() => {
     if (!menuOpen && !contextMenuOpen) return;
     const closeMenu = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
+      if (
+        !menuRef.current?.contains(event.target as Node) &&
+        !contextMenuRef.current?.contains(event.target as Node)
+      ) {
         setMenuOpen(false);
         setContextMenuOpen(false);
+        setContextMenuPosition(null);
       }
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMenuOpen(false);
         setContextMenuOpen(false);
+        setContextMenuPosition(null);
       }
     };
     document.addEventListener("mousedown", closeMenu);
@@ -99,6 +111,7 @@ export function TodoItem({
     setDraftText(todo.text);
     setMenuOpen(false);
     setContextMenuOpen(false);
+    setContextMenuPosition(null);
     setEditing(true);
   };
 
@@ -106,6 +119,7 @@ export function TodoItem({
     void onSetColor(todo.id, color);
     setMenuOpen(false);
     setContextMenuOpen(false);
+    setContextMenuPosition(null);
   };
 
   const openContextMenu = (event: ReactMouseEvent<HTMLElement>) => {
@@ -113,6 +127,22 @@ export function TodoItem({
     event.stopPropagation();
     setMenuOpen(false);
     setContextMenuOpen(true);
+    setContextMenuPosition({
+      x: Math.max(
+        CONTEXT_MENU_OFFSET,
+        Math.min(
+          event.clientX + CONTEXT_MENU_OFFSET,
+          window.innerWidth - CONTEXT_MENU_WIDTH - CONTEXT_MENU_OFFSET,
+        ),
+      ),
+      y: Math.max(
+        CONTEXT_MENU_OFFSET,
+        Math.min(
+          event.clientY + CONTEXT_MENU_OFFSET,
+          window.innerHeight - CONTEXT_MENU_HEIGHT - CONTEXT_MENU_OFFSET,
+        ),
+      ),
+    });
   };
 
   const saveText = () => {
@@ -205,7 +235,11 @@ export function TodoItem({
           className="more-button"
           aria-label="更多操作"
           aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={() => {
+            setContextMenuOpen(false);
+            setContextMenuPosition(null);
+            setMenuOpen((open) => !open);
+          }}
         >
           <MoreHorizontal size={17} />
         </button>
@@ -242,12 +276,23 @@ export function TodoItem({
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+      {createPortal(
         <AnimatePresence>
           {contextMenuOpen && (
             <motion.div
+              ref={contextMenuRef}
               className="todo-context-menu"
               role="menu"
               aria-label="待办自定义菜单"
+              style={{
+                left: contextMenuPosition?.x ?? CONTEXT_MENU_OFFSET,
+                top: contextMenuPosition?.y ?? CONTEXT_MENU_OFFSET,
+              }}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+              }}
               initial={{ opacity: 0, scale: 0.96, y: -4 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -4 }}
@@ -272,6 +317,7 @@ export function TodoItem({
                 onClick={() => {
                   void onPinTop(todo.id);
                   setContextMenuOpen(false);
+                  setContextMenuPosition(null);
                 }}
               >
                 <Pin size={14} /> 置顶
@@ -285,14 +331,16 @@ export function TodoItem({
                 onClick={() => {
                   void onRemove(todo.id);
                   setContextMenuOpen(false);
+                  setContextMenuPosition(null);
                 }}
               >
                 <Trash2 size={14} /> 删除
               </button>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
+        </AnimatePresence>,
+        document.body,
+      )}
     </motion.article>
   );
 }
