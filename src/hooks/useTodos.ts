@@ -66,10 +66,18 @@ export function useTodos() {
     [runCommand],
   );
 
-  const removeTodo = useCallback(
-    (id: string) =>
-      runCommand("remove_todo", { id }, (current) =>
-        current.filter((todo) => todo.id !== id),
+ const removeTodo = useCallback(
+   (id: string) =>
+     runCommand("remove_todo", { id }, (current) =>
+       current.filter((todo) => todo.id !== id),
+     ),
+   [runCommand],
+ );
+
+  const clearCompleted = useCallback(
+    () =>
+      runCommand("clear_completed", {}, (current) =>
+        current.filter((todo) => !todo.completed),
       ),
     [runCommand],
   );
@@ -187,9 +195,10 @@ export function useTodos() {
     totalMs: liveTodos.reduce((sum, todo) => sum + todo.liveMs, 0),
     activeTimerId:
       todos.find((todo) => todo.timerStartedAt !== null)?.id ?? null,
-    addTodo,
-    removeTodo,
-    updateTodoText,
+   addTodo,
+   removeTodo,
+    clearCompleted,
+   updateTodoText,
     toggleTodo,
     startTimer,
     pauseTimer,

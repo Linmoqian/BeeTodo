@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { motion } from "motion/react";
-import { Clock3, Maximize2, Sparkles } from "lucide-react";
+import { Clock3, ChevronDown, Maximize2, Sparkles, Trash2 } from "lucide-react";
 import { TodoInput } from "../components/TodoInput";
 import { TodoList } from "../components/TodoList";
 import { openFocusWindow } from "../lib/focusWindow";
@@ -26,6 +27,7 @@ export interface TodoActions {
   reorderTodos: (activeId: string, overId: string) => void | Promise<void>;
   setTodoColor: (id: string, color: TodoColor) => void | Promise<void>;
   pinTodoTop: (id: string) => void | Promise<void>;
+  clearCompleted: () => void | Promise<void>;
 }
 
 interface TodayPageProps extends TodoActions {
@@ -35,8 +37,9 @@ interface TodayPageProps extends TodoActions {
 }
 
 export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPageProps) {
+  const [showCompleted, setShowCompleted] = useState(true);
   const pendingTodos = todos.filter((todo) => !todo.completed);
-  const completedCount = todos.length - pendingTodos.length;
+  const completedTodos = todos.filter((todo) => todo.completed);
   const today = new Intl.DateTimeFormat("zh-CN", {
     month: "long",
     day: "numeric",
@@ -79,9 +82,9 @@ export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPagePro
           <h2>今天</h2>
           <span>{pendingTodos.length} 项待完成</span>
         </div>
-        {todos.length > 0 ? (
+        {pendingTodos.length > 0 ? (
           <TodoList
-            todos={todos}
+            todos={pendingTodos}
             activeTimerId={actions.activeTimerId}
             onToggle={actions.toggleTodo}
             onRemove={actions.removeTodo}
@@ -101,8 +104,48 @@ export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPagePro
         )}
       </section>
 
-      {completedCount > 0 && (
-        <p className="completion-note">今天已经完成 {completedCount} 件事，做得很好。</p>
+      {completedTodos.length > 0 && (
+        <section className="task-section completed-section">
+          <div className="section-heading">
+            <button
+              className="completed-toggle"
+              onClick={() => setShowCompleted((value) => !value)}
+              aria-expanded={showCompleted}
+              aria-label={showCompleted ? "折叠已完成任务" : "展开已完成任务"}
+            >
+              <ChevronDown
+                size={16}
+                className={showCompleted ? "chevron-open" : "chevron-closed"}
+              />
+              <h2>已完成</h2>
+              <span className="completed-count">{completedTodos.length} 项</span>
+            </button>
+            {showCompleted && (
+              <button
+                className="clear-completed-btn"
+                onClick={() => void actions.clearCompleted()}
+                aria-label="清除所有已完成任务"
+              >
+                <Trash2 size={14} />
+                清除
+              </button>
+            )}
+          </div>
+          {showCompleted && (
+            <TodoList
+              todos={completedTodos}
+              activeTimerId={actions.activeTimerId}
+              onToggle={actions.toggleTodo}
+              onRemove={actions.removeTodo}
+              onUpdateText={actions.updateTodoText}
+              onReorder={actions.reorderTodos}
+              onStartTimer={actions.startTimer}
+              onPauseTimer={actions.pauseTimer}
+              onSetColor={actions.setTodoColor}
+              onPinTop={actions.pinTodoTop}
+            />
+          )}
+        </section>
       )}
     </motion.div>
   );

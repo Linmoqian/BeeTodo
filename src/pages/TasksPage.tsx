@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Trash2 } from "lucide-react";
 import { TodoList } from "../components/TodoList";
 import type { Todo } from "../types";
 import type { TodoActions } from "./TodayPage";
@@ -13,6 +13,11 @@ interface TasksPageProps extends TodoActions {
 
 export function TasksPage({ todos, ...actions }: TasksPageProps) {
   const [filter, setFilter] = useState<Filter>("all");
+  const counts = {
+    all: todos.length,
+    pending: todos.filter((t) => !t.completed).length,
+    completed: todos.filter((t) => t.completed).length,
+  };
   const filteredTodos = todos.filter((todo) => {
     if (filter === "pending") return !todo.completed;
     if (filter === "completed") return todo.completed;
@@ -34,16 +39,29 @@ export function TasksPage({ todos, ...actions }: TasksPageProps) {
         </div>
       </header>
 
-      <div className="filter-control" aria-label="筛选任务">
-        {(["all", "pending", "completed"] as Filter[]).map((item) => (
+      <div className="filter-bar">
+        <div className="filter-control" aria-label="筛选任务">
+          {(["all", "pending", "completed"] as Filter[]).map((item) => (
+            <button
+              key={item}
+              className={filter === item ? "is-active" : ""}
+              onClick={() => setFilter(item)}
+            >
+              {{ all: "全部", pending: "进行中", completed: "已完成" }[item]}
+              <span className="filter-count">{counts[item]}</span>
+            </button>
+          ))}
+        </div>
+        {counts.completed > 0 && (
           <button
-            key={item}
-            className={filter === item ? "is-active" : ""}
-            onClick={() => setFilter(item)}
+            className="clear-completed-btn"
+            onClick={() => void actions.clearCompleted()}
+            aria-label="清除所有已完成任务"
           >
-            {{ all: "全部", pending: "进行中", completed: "已完成" }[item]}
+            <Trash2 size={14} />
+            清除已完成
           </button>
-        ))}
+        )}
       </div>
 
       {filteredTodos.length > 0 ? (

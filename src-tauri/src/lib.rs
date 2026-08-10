@@ -228,6 +228,14 @@ fn remove_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
 }
 
 #[tauri::command]
+fn clear_completed(state: State<'_, AppState>) -> Result<Vec<Todo>, String> {
+    let mut store = state.store.lock().map_err(|err| err.to_string())?;
+    store.todos.retain(|todo| !todo.completed);
+    persist_store(&state.store_path, &store)?;
+    Ok(store.todos.clone())
+}
+
+#[tauri::command]
 fn toggle_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     if let Some(index) = store.todos.iter().position(|todo| todo.id == id) {
@@ -802,9 +810,10 @@ pub fn run() {
             get_app_runtime_info,
             add_todo,
             update_todo_text,
-            remove_todo,
-            toggle_todo,
-            start_timer,
+           remove_todo,
+           toggle_todo,
+            clear_completed,
+           start_timer,
             pause_timer,
             reorder_todos,
             set_todo_color,

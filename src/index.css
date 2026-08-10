@@ -927,6 +927,71 @@ a:focus-visible {
   box-shadow: 0 2px 7px rgb(0 0 0 / 6%);
 }
 
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-count {
+  margin-left: 5px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.clear-completed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--faint);
+  background: transparent;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.clear-completed-btn:hover {
+  color: var(--danger, #d93636);
+  background: var(--surface-muted);
+}
+
+.completed-section {
+  margin-top: 32px;
+}
+
+.completed-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  padding: 0;
+  color: var(--foreground);
+}
+
+.completed-toggle h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.completed-toggle .completed-count {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.chevron-closed {
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+.chevron-open {
+  transition: transform 0.2s ease;
+}
+
 .modal-backdrop {
   position: fixed;
   z-index: 100;

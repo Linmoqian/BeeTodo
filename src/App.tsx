@@ -50,6 +50,7 @@ function App() {
                 reorderTodos={todos.reorderTodos}
                 setTodoColor={todos.setTodoColor}
                 pinTodoTop={todos.pinTodoTop}
+                clearCompleted={todos.clearCompleted}
               />
             }
           />
@@ -68,6 +69,7 @@ function App() {
                 reorderTodos={todos.reorderTodos}
                 setTodoColor={todos.setTodoColor}
                 pinTodoTop={todos.pinTodoTop}
+                clearCompleted={todos.clearCompleted}
               />
             }
           />
