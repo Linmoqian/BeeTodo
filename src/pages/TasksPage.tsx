@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { CheckCircle2, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TodoList } from "../components/TodoList";
 import type { Todo } from "../types";
 import type { TodoActions } from "./TodayPage";
@@ -13,6 +14,7 @@ interface TasksPageProps extends TodoActions {
 
 export function TasksPage({ todos, ...actions }: TasksPageProps) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const counts = {
     all: todos.length,
     pending: todos.filter((t) => !t.completed).length,
@@ -55,7 +57,7 @@ export function TasksPage({ todos, ...actions }: TasksPageProps) {
         {counts.completed > 0 && (
           <button
             className="clear-completed-btn"
-            onClick={() => void actions.clearCompleted()}
+            onClick={() => setConfirmOpen(true)}
             aria-label="清除所有已完成任务"
           >
             <Trash2 size={14} />
@@ -63,6 +65,19 @@ export function TasksPage({ todos, ...actions }: TasksPageProps) {
           </button>
         )}
       </div>
+
+      {confirmOpen && (
+        <ConfirmDialog
+          title="清除已完成任务"
+          description={`将永久删除 ${counts.completed} 项已完成任务，且无法撤销。`}
+          confirmLabel="确认清除"
+          onConfirm={() => {
+            setConfirmOpen(false);
+            void actions.clearCompleted();
+          }}
+          onCancel={() => setConfirmOpen(false)}
+        />
+      )}
 
       {filteredTodos.length > 0 ? (
         <TodoList

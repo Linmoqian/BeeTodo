@@ -230,9 +230,13 @@ fn remove_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
 #[tauri::command]
 fn clear_completed(state: State<'_, AppState>) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
-    store.todos.retain(|todo| !todo.completed);
+    clear_completed_todos(&mut store.todos);
     persist_store(&state.store_path, &store)?;
     Ok(store.todos.clone())
+}
+
+fn clear_completed_todos(todos: &mut Vec<Todo>) {
+    todos.retain(|todo| !todo.completed);
 }
 
 #[tauri::command]
@@ -843,7 +847,7 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_valid_note_id, note_tile_label, rename_todo, Todo};
+    use super::{clear_completed_todos, is_valid_note_id, note_tile_label, rename_todo, Todo};
 
     fn todo(id: &str, text: &str) -> Todo {
         Todo {
@@ -884,5 +888,19 @@ mod tests {
             Some("修改后的名称")
         );
         assert_eq!(todos[0].text, "新待办");
+    }
+
+    #[test]
+    fn clear_completed_keeps_pending_todos() {
+        let mut completed = todo("done", "已完成");
+        completed.completed = true;
+        completed.elapsed_ms = 120_000;
+        let mut todos = vec![todo("pending", "未完成"), completed];
+
+        clear_completed_todos(&mut todos);
+
+        assert_eq!(todos.len(), 1);
+        assert_eq!(todos[0].id, "pending");
+        assert!(!todos[0].completed);
     }
 }

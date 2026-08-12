@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Clock3, ChevronDown, Maximize2, Sparkles, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TodoInput } from "../components/TodoInput";
 import { TodoList } from "../components/TodoList";
 import { openFocusWindow } from "../lib/focusWindow";
@@ -38,6 +39,7 @@ interface TodayPageProps extends TodoActions {
 
 export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPageProps) {
   const [showCompleted, setShowCompleted] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const pendingTodos = todos.filter((todo) => !todo.completed);
   const completedTodos = todos.filter((todo) => todo.completed);
   const today = new Intl.DateTimeFormat("zh-CN", {
@@ -123,7 +125,7 @@ export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPagePro
             {showCompleted && (
               <button
                 className="clear-completed-btn"
-                onClick={() => void actions.clearCompleted()}
+                onClick={() => setConfirmOpen(true)}
                 aria-label="清除所有已完成任务"
               >
                 <Trash2 size={14} />
@@ -131,6 +133,18 @@ export function TodayPage({ todos, totalMs, userName, ...actions }: TodayPagePro
               </button>
             )}
           </div>
+          {confirmOpen && (
+            <ConfirmDialog
+              title="清除已完成任务"
+              description={`将永久删除 ${completedTodos.length} 项已完成任务，且无法撤销。`}
+              confirmLabel="确认清除"
+              onConfirm={() => {
+                setConfirmOpen(false);
+                void actions.clearCompleted();
+              }}
+              onCancel={() => setConfirmOpen(false)}
+            />
+          )}
           {showCompleted && (
             <TodoList
               todos={completedTodos}
