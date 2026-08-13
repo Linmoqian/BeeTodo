@@ -1162,6 +1162,18 @@ body:has(.modal-backdrop) {
   text-align: right;
 }
 
+.settings-hint {
+  margin: -2px 0 8px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+  text-align: right;
+}
+
+.shortcut-field input.is-recording {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-muted));
+}
+
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

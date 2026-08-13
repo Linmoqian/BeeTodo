@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -38,6 +38,7 @@ export function ThemeSettings({
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [shortcutError, setShortcutError] = useState("");
+  const [recordingShortcut, setRecordingShortcut] = useState(false);
 
   useEffect(() => {
     void getAppSettings().then((nextSettings) => {
@@ -61,6 +62,45 @@ export function ThemeSettings({
     const enabled = !settings.petEnabled;
     await save("set_pet_enabled", { enabled }, { petEnabled: enabled });
     await (enabled ? openPetWindow() : closePetWindow());
+  };
+
+  const saveShortcut = async (shortcut: string) => {
+    setSettings((current) => ({ ...current, quickNoteShortcut: shortcut }));
+    try {
+      await save(
+        "set_quick_note_shortcut",
+        { shortcut },
+        { quickNoteShortcut: shortcut },
+      );
+      setShortcutError("");
+    } catch {
+      setShortcutError("快捷键不可用，请换一个组合");
+      const currentSettings = await getAppSettings();
+      setSettings(currentSettings);
+    }
+  };
+
+  const recordShortcut = (event: KeyboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) return;
+
+    const modifiers = [
+      event.ctrlKey || event.metaKey ? "CommandOrControl" : "",
+      event.altKey ? "Alt" : "",
+      event.shiftKey ? "Shift" : "",
+    ].filter(Boolean);
+    if (modifiers.length === 0) {
+      setShortcutError("请至少包含一个修饰键，例如 Ctrl、⌘、Alt 或 Shift");
+      return;
+    }
+
+    const keyNames: Record<string, string> = { " ": "Space" };
+    const key =
+      keyNames[event.key] ??
+      (event.key.length === 1 ? event.key.toUpperCase() : event.key);
+    setRecordingShortcut(false);
+    void saveShortcut([...modifiers, key].join("+"));
   };
 
   return (
@@ -185,38 +225,19 @@ export function ThemeSettings({
                       value={settings.quickNoteShortcut}
                       placeholder="Ctrl+Space"
                       aria-label="快捷便签快捷键"
-                      onChange={(event) => {
+                      readOnly
+                      className={recordingShortcut ? "is-recording" : ""}
+                      onClick={() => {
                         setShortcutError("");
-                        const quickNoteShortcut = event.target.value;
-                        setSettings((current) => ({ ...current, quickNoteShortcut }));
+                        setRecordingShortcut(true);
                       }}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") event.currentTarget.blur();
-                      }}
-                      onBlur={() => {
-                        const shortcut = settings.quickNoteShortcut.trim();
-                        if (!shortcut) {
-                          setSettings((current) => ({
-                            ...current,
-                            quickNoteShortcut: DEFAULT_SETTINGS.quickNoteShortcut,
-                          }));
-                          setShortcutError("快捷键不能为空");
-                          return;
-                        }
-                        void save(
-                          "set_quick_note_shortcut",
-                          { shortcut },
-                          { quickNoteShortcut: shortcut },
-                        ).then(
-                          () => setShortcutError(""),
-                          () => {
-                            setShortcutError("快捷键不可用，请换一个组合");
-                            void getAppSettings().then(setSettings);
-                          },
-                        );
-                      }}
+                      onKeyDown={recordShortcut}
+                      onBlur={() => setRecordingShortcut(false)}
                     />
                   </label>
+                  <p className="settings-hint">
+                    {recordingShortcut ? "请按下新的组合键" : "点击后按下组合键即可修改"}
+                  </p>
                   {shortcutError && <p className="settings-error">{shortcutError}</p>}
                   <label className="range-row">
                     <span>磁贴透明度 <small>{settings.compactOpacity}%</small></span>
