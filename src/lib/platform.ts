@@ -79,6 +79,25 @@ export async function pauseRuntimeTimer(id: string): Promise<StoredTodo[]> {
   );
 }
 
+export async function startRuntimeTimer(id: string): Promise<StoredTodo[]> {
+  if (isTauriRuntime()) {
+    return invoke<StoredTodo[]>("start_timer", { id });
+  }
+  const startedAt = Date.now();
+  return writeLocalTodos(
+    readLocalTodos().map((todo) => {
+      const elapsedMs = todo.timerStartedAt
+        ? todo.elapsedMs + startedAt - todo.timerStartedAt
+        : todo.elapsedMs;
+      return {
+        ...todo,
+        elapsedMs,
+        timerStartedAt: todo.id === id && !todo.completed ? startedAt : null,
+      };
+    }),
+  );
+}
+
 export async function getAppSettings(): Promise<AppSettings> {
   if (isTauriRuntime()) {
     return invoke<AppSettings>("get_settings");

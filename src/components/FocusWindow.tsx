@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { Maximize2, Pause, TimerReset } from "lucide-react";
+import { Maximize2, Pause, Play, TimerReset } from "lucide-react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   DEFAULT_SETTINGS,
@@ -8,6 +8,7 @@ import {
   getRuntimeTodos,
   isTauriRuntime,
   pauseRuntimeTimer,
+  startRuntimeTimer,
   type AppSettings,
 } from "../lib/platform";
 import type { StoredTodo } from "../types";
@@ -26,6 +27,7 @@ function formatFocusTime(ms: number): string {
 export function FocusWindow() {
   const [todos, setTodos] = useState<StoredTodo[]>([]);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [focusedTodoId, setFocusedTodoId] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -37,6 +39,8 @@ export function FocusWindow() {
       ]);
       if (!mounted) return;
       setTodos(nextTodos);
+      const runningTodo = nextTodos.find((todo) => todo.timerStartedAt !== null);
+      if (runningTodo) setFocusedTodoId(runningTodo.id);
       setSettings(nextSettings);
       setNow(Date.now());
     };
@@ -66,13 +70,28 @@ export function FocusWindow() {
     };
   }, []);
 
-  const activeTodo = useMemo(
+  const runningTodo = useMemo(
     () => todos.find((todo) => todo.timerStartedAt !== null) ?? null,
     [todos],
   );
-  const liveMs = activeTodo?.timerStartedAt
-    ? activeTodo.elapsedMs + now - activeTodo.timerStartedAt
-    : activeTodo?.elapsedMs ?? 0;
+  const focusedTodo = useMemo(
+    () =>
+      (focusedTodoId && todos.find((todo) => todo.id === focusedTodoId)) ||
+      runningTodo,
+    [focusedTodoId, runningTodo, todos],
+  );
+  const liveMs = focusedTodo?.timerStartedAt
+    ? focusedTodo.elapsedMs + now - focusedTodo.timerStartedAt
+    : focusedTodo?.elapsedMs ?? 0;
+  const toggleFocusTimer = async () => {
+    if (!focusedTodo) return;
+    const nextTodos = focusedTodo.timerStartedAt
+      ? await pauseRuntimeTimer(focusedTodo.id)
+      : await startRuntimeTimer(focusedTodo.id);
+    setTodos(nextTodos);
+    setFocusedTodoId(focusedTodo.id);
+    setNow(Date.now());
+  };
   const surfaceOpacity = Math.max(0, 100 - settings.compactOpacity);
 
   return (
@@ -89,7 +108,7 @@ export function FocusWindow() {
         <TimerReset size={17} />
       </div>
       <div className="focus-window-copy">
-        <span>{activeTodo?.text ?? "尚未开始专注"}</span>
+        <span>{focusedTodo?.text ?? "尚未开始专注"}</span>
         <strong>{formatFocusTime(liveMs)}</strong>
       </div>
       <div className="focus-window-actions">
@@ -98,11 +117,15 @@ export function FocusWindow() {
         </button>
         <button
           type="button"
-          aria-label="暂停当前专注"
-          disabled={!activeTodo}
-          onClick={() => activeTodo && void pauseRuntimeTimer(activeTodo.id)}
+          aria-label={focusedTodo?.timerStartedAt ? "暂停当前专注" : "继续当前专注"}
+          disabled={!focusedTodo}
+          onClick={() => void toggleFocusTimer()}
         >
-          <Pause size={15} fill="currentColor" />
+          {focusedTodo?.timerStartedAt ? (
+            <Pause size={15} fill="currentColor" />
+          ) : (
+            <Play size={15} fill="currentColor" />
+          )}
         </button>
       </div>
     </motion.main>
