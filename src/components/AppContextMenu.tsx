@@ -35,9 +35,13 @@ export function AppContextMenu() {
         y: Math.max(8, Math.min(event.clientY, window.innerHeight - MENU_HEIGHT - 8)),
       });
     };
-    const closeMenu = () => setPosition(null);
+    const dismissMenu = () => setPosition(null);
+    const closeMenu = (event: Event) => {
+      if ((event as PointerEvent).button === 2) return;
+      dismissMenu();
+    };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeMenu();
+      if (event.key === "Escape") dismissMenu();
     };
 
     window.addEventListener("contextmenu", openMenu);

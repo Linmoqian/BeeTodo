@@ -57,7 +57,7 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
     if (!(target instanceof Element)) return;
     if (
       target.closest(
-        "button, input, textarea, select, a, label, nav, [contenteditable='true'], [role], .todo-row, .notes-workspace, .settings-sheet",
+        "button, input, textarea, select, a, label, nav, [contenteditable='true'], [role], .todo-row, .notes-workspace, .settings-sheet, .main-content",
       )
     ) {
       return;
@@ -71,7 +71,7 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
   };
 
   return (
-    <div className="app-shell" data-tauri-drag-region="deep" onMouseDown={startWindowDrag}>
+    <div className="app-shell" onMouseDown={startWindowDrag}>
       <aside className="sidebar">
         <WindowControls />
         <div className="brand-mark" aria-label="BeeTodo" data-tauri-drag-region>

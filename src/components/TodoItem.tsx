@@ -83,6 +83,7 @@ export function TodoItem({
   useEffect(() => {
     if (!menuOpen && !contextMenuOpen) return;
     const closeMenu = (event: MouseEvent) => {
+      if (event.button === 2) return;
       if (
         !menuRef.current?.contains(event.target as Node) &&
         !contextMenuRef.current?.contains(event.target as Node)
