@@ -45,11 +45,11 @@ describe("usePomodoro", () => {
     expect(result.current.isComplete).toBe(true);
   });
 
-  it("restores a running timer from its persisted deadline", () => {
+  it("restores a persisted running timer as paused with its remaining time", () => {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        remainingMs: POMODORO_DURATION_MS,
+        remainingMs: 10 * 60_000,
         isRunning: true,
         endsAt: NOW + 10 * 60_000,
       }),
@@ -58,11 +58,12 @@ describe("usePomodoro", () => {
     vi.setSystemTime(NOW + 4 * 60_000);
     const { result } = renderHook(() => usePomodoro());
 
-    expect(result.current.isRunning).toBe(true);
-    expect(result.current.remainingMs).toBe(6 * 60_000);
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.remainingMs).toBe(10 * 60_000);
+    expect(result.current.isComplete).toBe(false);
   });
 
-  it("restores an elapsed deadline as completed", () => {
+  it("restores an elapsed persisted timer as paused, not completed", () => {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
@@ -74,7 +75,8 @@ describe("usePomodoro", () => {
 
     const { result } = renderHook(() => usePomodoro());
 
-    expect(result.current.isComplete).toBe(true);
     expect(result.current.isRunning).toBe(false);
+    expect(result.current.isComplete).toBe(false);
+    expect(result.current.remainingMs).toBe(POMODORO_DURATION_MS);
   });
 });

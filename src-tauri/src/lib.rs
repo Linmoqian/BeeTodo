@@ -146,13 +146,16 @@ fn load_store(path: &Path) -> Result<TodoStore, String> {
             if matches!(store.settings.user_name.as_str(), "工程师" | "龚博后") {
                 store.settings.user_name = default_user_name();
             }
+            suspend_running_timers(&mut store.todos);
             Ok(store)
         }
         Err(_) => {
             let legacy_todos: Vec<Todo> =
                 serde_json::from_str(&raw).map_err(|err| err.to_string())?;
+            let mut todos = legacy_todos;
+            suspend_running_timers(&mut todos);
             Ok(TodoStore {
-                todos: legacy_todos,
+                todos,
                 focus_sessions: Vec::new(),
                 settings: AppSettings::default(),
                 settings_version: SETTINGS_VERSION,
@@ -197,6 +200,32 @@ fn settle_timer(todo: &mut Todo, focus_sessions: &mut Vec<FocusSession>, ended_a
             started_at,
             ended_at,
         });
+    }
+}
+
+fn suspend_running_timers(todos: &mut [Todo]) {
+    for todo in todos {
+        todo.timer_started_at = None;
+    }
+}
+
+fn settle_all_timers(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    let Ok(mut store) = state.store.lock() else {
+        return;
+    };
+
+    let now = now_ms();
+    let TodoStore {
+        todos,
+        focus_sessions,
+        ..
+    } = &mut *store;
+    for todo in todos.iter_mut() {
+        settle_timer(todo, focus_sessions, now);
+    }
+    if let Err(error) = persist_store(&state.store_path, &store) {
+        eprintln!("退出时持久化计时数据失败：{error}");
     }
 }
 
@@ -875,6 +904,9 @@ pub fn run() {
                     eprintln!("从 Dock 恢复主窗口失败：{error}");
                 }
             }
+            if let tauri::RunEvent::Exit = event {
+                settle_all_timers(app);
+            }
         });
 }
 
@@ -882,7 +914,7 @@ pub fn run() {
 mod tests {
     use super::{
         clear_completed_todos, is_valid_note_id, note_tile_label, rename_todo, settle_timer,
-        switch_timer, Todo, TodoStore,
+        suspend_running_timers, switch_timer, Todo, TodoStore,
     };
 
     fn todo(id: &str, text: &str) -> Todo {
@@ -959,6 +991,23 @@ mod tests {
         active.timer_started_at = Some(5_000);
         settle_timer(&mut active, &mut focus_sessions, 5_000);
         assert_eq!(focus_sessions.len(), 1);
+    }
+
+    #[test]
+    fn suspend_running_timers_pauses_without_crediting_elapsed_time() {
+        let mut running = todo("running", "运行中的任务");
+        running.elapsed_ms = 4_000;
+        running.timer_started_at = Some(10_000);
+        let mut paused = todo("paused", "已暂停的任务");
+        paused.elapsed_ms = 1_000;
+        let mut todos = vec![running, paused];
+
+        suspend_running_timers(&mut todos);
+
+        assert_eq!(todos[0].timer_started_at, None);
+        assert_eq!(todos[0].elapsed_ms, 4_000);
+        assert_eq!(todos[1].timer_started_at, None);
+        assert_eq!(todos[1].elapsed_ms, 1_000);
     }
 
     #[test]

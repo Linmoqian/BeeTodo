@@ -10,7 +10,7 @@ interface PomodoroState {
   endsAt: number | null;
 }
 
-function initialPomodoroState(now: number): PomodoroState {
+function initialPomodoroState(): PomodoroState {
   try {
     const raw = localStorage.getItem(POMODORO_STORAGE_KEY);
     if (!raw) {
@@ -21,18 +21,11 @@ function initialPomodoroState(now: number): PomodoroState {
       };
     }
     const stored = JSON.parse(raw) as Partial<PomodoroState>;
-    if (stored.isRunning && typeof stored.endsAt === "number") {
-      const remainingMs = Math.max(0, stored.endsAt - now);
-      return {
-        remainingMs,
-        isRunning: remainingMs > 0,
-        endsAt: remainingMs > 0 ? stored.endsAt : null,
-      };
-    }
     const remainingMs =
       typeof stored.remainingMs === "number"
         ? Math.min(POMODORO_DURATION_MS, Math.max(0, stored.remainingMs))
         : POMODORO_DURATION_MS;
+    // 应用关闭期间倒计时视为暂停，不继承关闭后流逝的时间
     return { remainingMs, isRunning: false, endsAt: null };
   } catch {
     return {
@@ -48,7 +41,7 @@ function persistPomodoroState(state: PomodoroState) {
 }
 
 export function usePomodoro() {
-  const [state, setState] = useState<PomodoroState>(() => initialPomodoroState(Date.now()));
+  const [state, setState] = useState<PomodoroState>(initialPomodoroState);
 
   useEffect(() => {
     persistPomodoroState(state);
