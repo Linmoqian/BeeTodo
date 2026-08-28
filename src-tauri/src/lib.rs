@@ -34,6 +34,13 @@ struct Todo {
     color: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct FocusSession {
+    started_at: u64,
+    ended_at: u64,
+}
+
 fn default_todo_color() -> String {
     "default".to_string()
 }
@@ -90,6 +97,8 @@ struct TodoStore {
     #[serde(default)]
     todos: Vec<Todo>,
     #[serde(default)]
+    focus_sessions: Vec<FocusSession>,
+    #[serde(default)]
     settings: AppSettings,
     #[serde(default)]
     settings_version: u8,
@@ -99,6 +108,7 @@ impl Default for TodoStore {
     fn default() -> Self {
         Self {
             todos: Vec::new(),
+            focus_sessions: Vec::new(),
             settings: AppSettings::default(),
             settings_version: SETTINGS_VERSION,
         }
@@ -143,6 +153,7 @@ fn load_store(path: &Path) -> Result<TodoStore, String> {
                 serde_json::from_str(&raw).map_err(|err| err.to_string())?;
             Ok(TodoStore {
                 todos: legacy_todos,
+                focus_sessions: Vec::new(),
                 settings: AppSettings::default(),
                 settings_version: SETTINGS_VERSION,
             })
@@ -166,6 +177,45 @@ fn persist_store(path: &Path, store: &TodoStore) -> Result<(), String> {
 fn list_todos(state: State<'_, AppState>) -> Result<Vec<Todo>, String> {
     let store = state.store.lock().map_err(|err| err.to_string())?;
     Ok(store.todos.clone())
+}
+
+#[tauri::command]
+fn list_focus_sessions(state: State<'_, AppState>) -> Result<Vec<FocusSession>, String> {
+    let store = state.store.lock().map_err(|err| err.to_string())?;
+    Ok(store.focus_sessions.clone())
+}
+
+fn settle_timer(todo: &mut Todo, focus_sessions: &mut Vec<FocusSession>, ended_at: u64) {
+    let Some(started_at) = todo.timer_started_at.take() else {
+        return;
+    };
+
+    let elapsed_ms = ended_at.saturating_sub(started_at);
+    todo.elapsed_ms = todo.elapsed_ms.saturating_add(elapsed_ms);
+    if elapsed_ms > 0 {
+        focus_sessions.push(FocusSession {
+            started_at,
+            ended_at,
+        });
+    }
+}
+
+fn switch_timer(
+    todos: &mut [Todo],
+    focus_sessions: &mut Vec<FocusSession>,
+    next_todo_id: &str,
+    started_at: u64,
+) {
+    for todo in todos.iter_mut() {
+        settle_timer(todo, focus_sessions, started_at);
+    }
+
+    if let Some(todo) = todos
+        .iter_mut()
+        .find(|todo| todo.id == next_todo_id && !todo.completed)
+    {
+        todo.timer_started_at = Some(started_at);
+    }
 }
 
 #[tauri::command]
@@ -222,7 +272,11 @@ fn update_todo_text(
 #[tauri::command]
 fn remove_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
-    store.todos.retain(|todo| todo.id != id);
+    let now = now_ms();
+    if let Some(index) = store.todos.iter().position(|todo| todo.id == id) {
+        let mut todo = store.todos.remove(index);
+        settle_timer(&mut todo, &mut store.focus_sessions, now);
+    }
     persist_store(&state.store_path, &store)?;
     Ok(store.todos.clone())
 }
@@ -247,12 +301,7 @@ fn toggle_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
         let next_completed = !todo.completed;
 
         if next_completed {
-            if let Some(started_at) = todo.timer_started_at {
-                todo.elapsed_ms = todo
-                    .elapsed_ms
-                    .saturating_add(now_ms().saturating_sub(started_at));
-                todo.timer_started_at = None;
-            }
+            settle_timer(&mut todo, &mut store.focus_sessions, now_ms());
             todo.completed = true;
             store.todos.push(todo);
         } else {
@@ -269,22 +318,12 @@ fn toggle_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
 fn start_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     let now = now_ms();
-
-    for todo in store.todos.iter_mut() {
-        if let Some(started_at) = todo.timer_started_at {
-            todo.elapsed_ms = todo
-                .elapsed_ms
-                .saturating_add(now.saturating_sub(started_at));
-            todo.timer_started_at = None;
-        }
-    }
-
-    for todo in store.todos.iter_mut() {
-        if todo.id == id && !todo.completed {
-            todo.timer_started_at = Some(now);
-            break;
-        }
-    }
+    let TodoStore {
+        todos,
+        focus_sessions,
+        ..
+    } = &mut *store;
+    switch_timer(todos, focus_sessions, &id, now);
 
     persist_store(&state.store_path, &store)?;
     Ok(store.todos.clone())
@@ -294,17 +333,10 @@ fn start_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
 fn pause_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     let now = now_ms();
-    for todo in store.todos.iter_mut() {
-        if todo.id != id {
-            continue;
-        }
-        if let Some(started_at) = todo.timer_started_at {
-            todo.elapsed_ms = todo
-                .elapsed_ms
-                .saturating_add(now.saturating_sub(started_at));
-            todo.timer_started_at = None;
-        }
-        break;
+    if let Some(index) = store.todos.iter().position(|todo| todo.id == id) {
+        let mut todo = store.todos.remove(index);
+        settle_timer(&mut todo, &mut store.focus_sessions, now);
+        store.todos.insert(index, todo);
     }
     persist_store(&state.store_path, &store)?;
     Ok(store.todos.clone())
@@ -811,13 +843,14 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             list_todos,
+            list_focus_sessions,
             get_app_runtime_info,
             add_todo,
             update_todo_text,
-           remove_todo,
-           toggle_todo,
+            remove_todo,
+            toggle_todo,
             clear_completed,
-           start_timer,
+            start_timer,
             pause_timer,
             reorder_todos,
             set_todo_color,
@@ -847,7 +880,10 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::{clear_completed_todos, is_valid_note_id, note_tile_label, rename_todo, Todo};
+    use super::{
+        clear_completed_todos, is_valid_note_id, note_tile_label, rename_todo, settle_timer,
+        switch_timer, Todo, TodoStore,
+    };
 
     fn todo(id: &str, text: &str) -> Todo {
         Todo {
@@ -902,5 +938,57 @@ mod tests {
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].id, "pending");
         assert!(!todos[0].completed);
+    }
+
+    #[test]
+    fn settling_timer_records_positive_session_once() {
+        let mut active = todo("active", "计时任务");
+        active.elapsed_ms = 500;
+        active.timer_started_at = Some(1_000);
+        let mut focus_sessions = Vec::new();
+
+        settle_timer(&mut active, &mut focus_sessions, 3_500);
+        settle_timer(&mut active, &mut focus_sessions, 4_000);
+
+        assert_eq!(active.elapsed_ms, 3_000);
+        assert_eq!(active.timer_started_at, None);
+        assert_eq!(focus_sessions.len(), 1);
+        assert_eq!(focus_sessions[0].started_at, 1_000);
+        assert_eq!(focus_sessions[0].ended_at, 3_500);
+
+        active.timer_started_at = Some(5_000);
+        settle_timer(&mut active, &mut focus_sessions, 5_000);
+        assert_eq!(focus_sessions.len(), 1);
+    }
+
+    #[test]
+    fn switching_timer_settles_previous_and_starts_selected_todo() {
+        let mut previous = todo("previous", "之前的任务");
+        previous.timer_started_at = Some(2_000);
+        let mut todos = vec![previous, todo("next", "下一个任务")];
+        let mut focus_sessions = Vec::new();
+
+        switch_timer(&mut todos, &mut focus_sessions, "next", 7_000);
+
+        assert_eq!(todos[0].elapsed_ms, 5_000);
+        assert_eq!(todos[0].timer_started_at, None);
+        assert_eq!(todos[1].timer_started_at, Some(7_000));
+        assert_eq!(focus_sessions.len(), 1);
+        assert_eq!(focus_sessions[0].started_at, 2_000);
+        assert_eq!(focus_sessions[0].ended_at, 7_000);
+    }
+
+    #[test]
+    fn store_without_focus_sessions_uses_empty_history() {
+        let store: TodoStore = serde_json::from_str(
+            r#"{
+                "todos": [],
+                "settings": {},
+                "settingsVersion": 1
+            }"#,
+        )
+        .expect("legacy store should deserialize");
+
+        assert!(store.focus_sessions.is_empty());
     }
 }

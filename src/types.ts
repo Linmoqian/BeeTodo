@@ -12,13 +12,12 @@ export interface Todo extends StoredTodo {
   liveMs: number;
 }
 
-export type TodoColor =
-  | "default"
-  | "amber"
-  | "rose"
-  | "emerald"
-  | "sky"
-  | "slate";
+export interface FocusSession {
+  startedAt: number;
+  endedAt: number;
+}
+
+export type TodoColor = "default" | "amber" | "rose" | "emerald" | "sky" | "slate";
 
 export interface StudyNote {
   id: string;

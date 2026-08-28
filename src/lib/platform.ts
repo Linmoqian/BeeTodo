@@ -1,9 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { StoredTodo, StudyNote } from "../types";
+import type { FocusSession, StoredTodo, StudyNote } from "../types";
 
 const TODO_STORAGE_KEY = "beetodo-todos";
 const SETTINGS_STORAGE_KEY = "beetodo-settings";
 const NOTES_STORAGE_KEY = "beetodo-study-notes";
+const FOCUS_SESSIONS_STORAGE_KEY = "beetodo-focus-sessions";
 
 export interface AppSettings {
   alwaysOnTop: boolean;
@@ -45,6 +46,46 @@ export function writeLocalTodos(todos: StoredTodo[]): StoredTodo[] {
   return todos;
 }
 
+export function readLocalFocusSessions(): FocusSession[] {
+  return readJson<FocusSession[]>(FOCUS_SESSIONS_STORAGE_KEY, []).filter(
+    (session) =>
+      Number.isFinite(session.startedAt) &&
+      Number.isFinite(session.endedAt) &&
+      session.endedAt > session.startedAt,
+  );
+}
+
+export function writeLocalFocusSessions(sessions: FocusSession[]): FocusSession[] {
+  localStorage.setItem(FOCUS_SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+  return sessions;
+}
+
+export function settleLocalFocusSessions(
+  todos: StoredTodo[],
+  endedAt: number,
+  todoId?: string,
+): FocusSession[] {
+  const additions = todos
+    .filter(
+      (todo) =>
+        todo.timerStartedAt !== null &&
+        todo.timerStartedAt < endedAt &&
+        (todoId === undefined || todo.id === todoId),
+    )
+    .map((todo) => ({ startedAt: todo.timerStartedAt as number, endedAt }));
+
+  if (additions.length === 0) return readLocalFocusSessions();
+
+  const sessions = readLocalFocusSessions();
+  additions.forEach((addition) => {
+    const exists = sessions.some(
+      (session) => session.startedAt === addition.startedAt && session.endedAt === addition.endedAt,
+    );
+    if (!exists) sessions.push(addition);
+  });
+  return writeLocalFocusSessions(sessions);
+}
+
 export function readLocalNotes(): StudyNote[] {
   return readJson<StudyNote[]>(NOTES_STORAGE_KEY, []);
 }
@@ -61,13 +102,22 @@ export async function getRuntimeTodos(): Promise<StoredTodo[]> {
   return readLocalTodos();
 }
 
+export async function getRuntimeFocusSessions(): Promise<FocusSession[]> {
+  if (isTauriRuntime()) {
+    return invoke<FocusSession[]>("list_focus_sessions");
+  }
+  return readLocalFocusSessions();
+}
+
 export async function pauseRuntimeTimer(id: string): Promise<StoredTodo[]> {
   if (isTauriRuntime()) {
     return invoke<StoredTodo[]>("pause_timer", { id });
   }
   const now = Date.now();
+  const todos = readLocalTodos();
+  settleLocalFocusSessions(todos, now, id);
   return writeLocalTodos(
-    readLocalTodos().map((todo) =>
+    todos.map((todo) =>
       todo.id === id && todo.timerStartedAt
         ? {
             ...todo,
@@ -84,8 +134,10 @@ export async function startRuntimeTimer(id: string): Promise<StoredTodo[]> {
     return invoke<StoredTodo[]>("start_timer", { id });
   }
   const startedAt = Date.now();
+  const todos = readLocalTodos();
+  settleLocalFocusSessions(todos, startedAt);
   return writeLocalTodos(
-    readLocalTodos().map((todo) => {
+    todos.map((todo) => {
       const elapsedMs = todo.timerStartedAt
         ? todo.elapsedMs + startedAt - todo.timerStartedAt
         : todo.elapsedMs;

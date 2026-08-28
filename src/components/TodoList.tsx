@@ -7,10 +7,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence } from "motion/react";
 import { GripVertical } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +16,7 @@ import type { Todo, TodoColor } from "../types";
 
 interface TodoListProps {
   todos: Todo[];
+  variant?: "default" | "dashboard";
   activeTimerId: string | null;
   onToggle: (id: string) => void | Promise<void>;
   onRemove: (id: string) => void | Promise<void>;
@@ -32,6 +30,7 @@ interface TodoListProps {
 
 export function TodoList({
   todos,
+  variant = "default",
   activeTimerId,
   onToggle,
   onRemove,
@@ -47,7 +46,7 @@ export function TodoList({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -85,15 +84,13 @@ export function TodoList({
       onDragEnd={handleDragEnd}
       onDragCancel={clearDragState}
     >
-      <SortableContext
-        items={todos.map((t) => t.id)}
-        strategy={verticalListSortingStrategy}
-      >
+      <SortableContext items={todos.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         <AnimatePresence>
           {todos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
+              variant={variant}
               isActive={activeTimerId === todo.id}
               dropPosition={
                 overId === todo.id && draggedId !== todo.id

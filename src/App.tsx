@@ -31,7 +31,7 @@ function App() {
 
   return (
     <HashRouter>
-      <AppShell onSettingsChange={handleSettingsChange}>
+      <AppShell settings={settings} totalMs={todos.totalMs} onSettingsChange={handleSettingsChange}>
         <Routes>
           <Route
             path="/"
@@ -40,6 +40,7 @@ function App() {
                 todos={todos.todos}
                 totalMs={todos.totalMs}
                 userName={settings.userName}
+                focusSessions={todos.focusSessions}
                 activeTimerId={todos.activeTimerId}
                 addTodo={todos.addTodo}
                 removeTodo={todos.removeTodo}

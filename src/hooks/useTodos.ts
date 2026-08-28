@@ -1,17 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
+  getRuntimeFocusSessions,
   isTauriRuntime,
+  readLocalFocusSessions,
   readLocalTodos,
+  settleLocalFocusSessions,
   writeLocalTodos,
 } from "../lib/platform";
-import type { StoredTodo, TodoColor } from "../types";
+import { emitDebugEvent } from "../lib/debugBus";
+import { getDailyFocusStats } from "../lib/focusStats";
+import type { FocusSession, StoredTodo, TodoColor } from "../types";
 
 type TodoUpdater = (todos: StoredTodo[]) => StoredTodo[];
 
 export function useTodos() {
   const [todos, setTodos] = useState<StoredTodo[]>(() =>
     isTauriRuntime() ? [] : readLocalTodos(),
+  );
+  const [focusSessions, setFocusSessions] = useState<FocusSession[]>(() =>
+    isTauriRuntime() ? [] : readLocalFocusSessions(),
   );
   const [now, setNow] = useState(Date.now());
 
@@ -22,26 +30,35 @@ export function useTodos() {
 
   useEffect(() => {
     if (!isTauriRuntime()) return;
-    void invoke<StoredTodo[]>("list_todos")
-      .then(setTodos)
-      .catch((error) => console.error("Failed to load todos", error));
+    void Promise.all([invoke<StoredTodo[]>("list_todos"), getRuntimeFocusSessions()])
+      .then(([nextTodos, nextFocusSessions]) => {
+        setTodos(nextTodos);
+        setFocusSessions(nextFocusSessions);
+      })
+      .catch((error) => console.error("Failed to load todo data", error));
   }, []);
 
   useEffect(() => {
     if (isTauriRuntime()) return;
-    const syncTodos = () => setTodos(readLocalTodos());
-    window.addEventListener("storage", syncTodos);
-    return () => window.removeEventListener("storage", syncTodos);
+    const syncTodoData = () => {
+      setTodos(readLocalTodos());
+      setFocusSessions(readLocalFocusSessions());
+    };
+    window.addEventListener("storage", syncTodoData);
+    return () => window.removeEventListener("storage", syncTodoData);
   }, []);
 
   const updateLocal = useCallback((updater: TodoUpdater) => {
-    setTodos((current) => writeLocalTodos(updater(current)));
+    const nextTodos = writeLocalTodos(updater(readLocalTodos()));
+    setTodos(nextTodos);
+    setFocusSessions(readLocalFocusSessions());
   }, []);
 
   const runCommand = useCallback(
     async (command: string, args: Record<string, unknown>, updater: TodoUpdater) => {
       if (isTauriRuntime()) {
         setTodos(await invoke<StoredTodo[]>(command, args));
+        setFocusSessions(await getRuntimeFocusSessions());
         return;
       }
       updateLocal(updater);
@@ -66,19 +83,24 @@ export function useTodos() {
     [runCommand],
   );
 
- const removeTodo = useCallback(
-   (id: string) =>
-     runCommand("remove_todo", { id }, (current) =>
-       current.filter((todo) => todo.id !== id),
-     ),
-   [runCommand],
- );
+  const removeTodo = useCallback(
+    (id: string) =>
+      runCommand("remove_todo", { id }, (current) => {
+        settleLocalFocusSessions(current, Date.now(), id);
+        return current.filter((todo) => todo.id !== id);
+      }),
+    [runCommand],
+  );
 
   const clearCompleted = useCallback(
     () =>
-      runCommand("clear_completed", {}, (current) =>
-        current.filter((todo) => !todo.completed),
-      ),
+      runCommand("clear_completed", {}, (current) => {
+        const endedAt = Date.now();
+        current
+          .filter((todo) => todo.completed && todo.timerStartedAt !== null)
+          .forEach((todo) => settleLocalFocusSessions(current, endedAt, todo.id));
+        return current.filter((todo) => !todo.completed);
+      }),
     [runCommand],
   );
 
@@ -95,9 +117,11 @@ export function useTodos() {
       runCommand("toggle_todo", { id }, (current) => {
         const target = current.find((todo) => todo.id === id);
         if (!target) return current;
+        const endedAt = Date.now();
+        settleLocalFocusSessions(current, endedAt, id);
         const completed = !target.completed;
         const elapsedMs = target.timerStartedAt
-          ? target.elapsedMs + Date.now() - target.timerStartedAt
+          ? target.elapsedMs + endedAt - target.timerStartedAt
           : target.elapsedMs;
         const next = {
           ...target,
@@ -115,6 +139,7 @@ export function useTodos() {
     (id: string) =>
       runCommand("start_timer", { id }, (current) => {
         const startedAt = Date.now();
+        settleLocalFocusSessions(current, startedAt);
         return current.map((todo) => {
           const elapsedMs = todo.timerStartedAt
             ? todo.elapsedMs + startedAt - todo.timerStartedAt
@@ -122,8 +147,7 @@ export function useTodos() {
           return {
             ...todo,
             elapsedMs,
-            timerStartedAt:
-              todo.id === id && !todo.completed ? startedAt : null,
+            timerStartedAt: todo.id === id && !todo.completed ? startedAt : null,
           };
         });
       }),
@@ -132,17 +156,19 @@ export function useTodos() {
 
   const pauseTimer = useCallback(
     (id: string) =>
-      runCommand("pause_timer", { id }, (current) =>
-        current.map((todo) =>
+      runCommand("pause_timer", { id }, (current) => {
+        const endedAt = Date.now();
+        settleLocalFocusSessions(current, endedAt, id);
+        return current.map((todo) =>
           todo.id === id && todo.timerStartedAt
             ? {
                 ...todo,
-                elapsedMs: todo.elapsedMs + Date.now() - todo.timerStartedAt,
+                elapsedMs: todo.elapsedMs + endedAt - todo.timerStartedAt,
                 timerStartedAt: null,
               }
             : todo,
-        ),
-      ),
+        );
+      }),
     [runCommand],
   );
 
@@ -172,9 +198,7 @@ export function useTodos() {
     (id: string) =>
       runCommand("pin_todo_top", { id }, (current) => {
         const target = current.find((todo) => todo.id === id);
-        return target
-          ? [target, ...current.filter((todo) => todo.id !== id)]
-          : current;
+        return target ? [target, ...current.filter((todo) => todo.id !== id)] : current;
       }),
     [runCommand],
   );
@@ -183,22 +207,35 @@ export function useTodos() {
     () =>
       todos.map((todo) => ({
         ...todo,
-        liveMs: todo.timerStartedAt
-          ? todo.elapsedMs + now - todo.timerStartedAt
-          : todo.elapsedMs,
+        liveMs: todo.timerStartedAt ? todo.elapsedMs + now - todo.timerStartedAt : todo.elapsedMs,
       })),
     [now, todos],
   );
 
+  const focusStats = useMemo(
+    () => getDailyFocusStats(focusSessions, todos, now),
+    [focusSessions, now, todos],
+  );
+  const todayFocusMinutes = Math.floor(focusStats.todayMs / 60_000);
+  const yesterdayFocusMinutes = Math.floor(focusStats.yesterdayMs / 60_000);
+
+  useEffect(() => {
+    emitDebugEvent("focus-stats", "今日与昨日专注统计已更新", "debug", {
+      todayMinutes: todayFocusMinutes,
+      yesterdayMinutes: yesterdayFocusMinutes,
+    });
+  }, [todayFocusMinutes, yesterdayFocusMinutes]);
+
   return {
     todos: liveTodos,
+    focusSessions,
+    focusStats,
     totalMs: liveTodos.reduce((sum, todo) => sum + todo.liveMs, 0),
-    activeTimerId:
-      todos.find((todo) => todo.timerStartedAt !== null)?.id ?? null,
-   addTodo,
-   removeTodo,
+    activeTimerId: todos.find((todo) => todo.timerStartedAt !== null)?.id ?? null,
+    addTodo,
+    removeTodo,
     clearCompleted,
-   updateTodoText,
+    updateTodoText,
     toggleTodo,
     startTimer,
     pauseTimer,

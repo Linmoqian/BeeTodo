@@ -42,6 +42,7 @@ function formatTime(ms: number): string {
 
 interface TodoItemProps {
   todo: Todo;
+  variant?: "default" | "dashboard";
   isActive: boolean;
   dropPosition?: "before" | "after" | null;
   onToggle: (id: string) => void | Promise<void>;
@@ -55,6 +56,7 @@ interface TodoItemProps {
 
 export function TodoItem({
   todo,
+  variant = "default",
   isActive,
   dropPosition = null,
   onToggle,
@@ -67,13 +69,16 @@ export function TodoItem({
 }: TodoItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [editing, setEditing] = useState(false);
   const [draftText, setDraftText] = useState(todo.text);
   const menuRef = useRef<HTMLDivElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: todo.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: todo.id,
+  });
 
   useEffect(() => {
     if (!menuOpen && !contextMenuOpen) return;
@@ -165,10 +170,11 @@ export function TodoItem({
         isDragging ? "is-dragging" : ""
       } ${dropPosition ? `drop-${dropPosition}` : ""} ${
         menuOpen || contextMenuOpen ? "has-open-menu" : ""
-      }`}
+      } ${variant === "dashboard" ? "todo-row-dashboard" : ""}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
       <button
+        type="button"
         className="drag-handle"
         aria-label={`拖动任务：${todo.text}`}
         {...attributes}
@@ -178,6 +184,7 @@ export function TodoItem({
       </button>
 
       <button
+        type="button"
         className={`todo-check ${todo.completed ? "is-checked" : ""}`}
         aria-label={todo.completed ? "标记为未完成" : "标记为已完成"}
         onClick={() => void onToggle(todo.id)}
@@ -222,16 +229,22 @@ export function TodoItem({
       <time className={isActive ? "is-running" : ""}>{formatTime(todo.liveMs)}</time>
 
       <button
+        type="button"
         className="timer-button"
         disabled={todo.completed}
         aria-label={isActive ? "暂停计时" : "开始计时"}
         onClick={toggleTimer}
       >
-        {isActive ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+        {isActive ? (
+          <Pause size={14} fill="currentColor" />
+        ) : (
+          <Play size={14} fill="currentColor" />
+        )}
       </button>
 
       <div className="todo-menu-wrap" ref={menuRef}>
         <button
+          type="button"
           className="more-button"
           aria-label="更多操作"
           aria-expanded={menuOpen}
@@ -251,15 +264,16 @@ export function TodoItem({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -4 }}
             >
-              <button onClick={() => void onPinTop(todo.id)}>
+              <button type="button" onClick={() => void onPinTop(todo.id)}>
                 <Pin size={14} /> 置顶
               </button>
-              <button className="rename-button" onClick={startEditing}>
+              <button type="button" className="rename-button" onClick={startEditing}>
                 <Pencil size={14} /> 重命名
               </button>
               <div className="color-options" aria-label="任务颜色">
                 {COLORS.map((color) => (
                   <button
+                    type="button"
                     key={color.value}
                     className={`color-dot color-${color.value} ${
                       todo.color === color.value ? "is-selected" : ""
@@ -270,7 +284,7 @@ export function TodoItem({
                   />
                 ))}
               </div>
-              <button className="danger" onClick={() => void onRemove(todo.id)}>
+              <button type="button" className="danger" onClick={() => void onRemove(todo.id)}>
                 <Trash2 size={14} /> 删除
               </button>
             </motion.div>
@@ -301,6 +315,7 @@ export function TodoItem({
               <div className="color-options" aria-label="任务颜色">
                 {COLORS.map((color) => (
                   <button
+                    type="button"
                     key={color.value}
                     className={`color-dot color-${color.value} ${
                       todo.color === color.value ? "is-selected" : ""

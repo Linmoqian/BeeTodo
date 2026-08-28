@@ -5,6 +5,9 @@ import { FocusWindow } from "./components/FocusWindow";
 import { PetWindow } from "./components/PetWindow";
 import { PinControlWindow } from "./components/PinControlWindow";
 import { isTauriRuntime } from "./lib/platform";
+import { initializeDebugBus } from "./lib/debugBus";
+
+initializeDebugBus();
 
 const QuickNoteWindow = lazy(async () => {
   const module = await import("./components/QuickNoteWindow");
@@ -36,11 +39,7 @@ const widgetViewClass = isPetView
         : "note-tile-view";
 
 if (isTauriRuntime()) {
-  window.addEventListener(
-    "contextmenu",
-    (event) => event.preventDefault(),
-    { capture: true },
-  );
+  window.addEventListener("contextmenu", (event) => event.preventDefault(), { capture: true });
 }
 
 if (isPetView || isFocusView || isQuickNoteView || isPinControlView || noteTileId) {
@@ -58,17 +57,19 @@ const rootElement = isPetView ? (
 ) : isFocusView ? (
   <FocusWindow />
 ) : isQuickNoteView ? (
-  <Suspense fallback={null}><QuickNoteWindow /></Suspense>
+  <Suspense fallback={null}>
+    <QuickNoteWindow />
+  </Suspense>
 ) : isPinControlView ? (
   <PinControlWindow />
 ) : noteTileId ? (
-  <Suspense fallback={null}><NoteTileWindow noteId={noteTileId} /></Suspense>
+  <Suspense fallback={null}>
+    <NoteTileWindow noteId={noteTileId} />
+  </Suspense>
 ) : (
   <App />
 );
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    {rootElement}
-  </React.StrictMode>,
+  <React.StrictMode>{rootElement}</React.StrictMode>,
 );

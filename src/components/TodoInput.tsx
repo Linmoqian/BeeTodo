@@ -4,9 +4,10 @@ import { ArrowUp } from "lucide-react";
 
 interface TodoInputProps {
   onAdd: (text: string) => void | Promise<void>;
+  variant?: "default" | "dashboard";
 }
 
-export function TodoInput({ onAdd }: TodoInputProps) {
+export function TodoInput({ onAdd, variant = "default" }: TodoInputProps) {
   const [text, setText] = useState("");
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -18,7 +19,11 @@ export function TodoInput({ onAdd }: TodoInputProps) {
   };
 
   return (
-    <form className="task-composer" onSubmit={handleSubmit} autoComplete="off">
+    <form
+      className={`task-composer ${variant === "dashboard" ? "task-composer-dashboard" : ""}`}
+      onSubmit={handleSubmit}
+      autoComplete="off"
+    >
       <label className="sr-only" htmlFor="new-task">
         添加任务
       </label>
