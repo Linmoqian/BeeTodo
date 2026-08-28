@@ -12,7 +12,7 @@ import {
 import { NavLink } from "react-router-dom";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ThemeSettings } from "./ThemeSettings";
-import { isTauriRuntime, updateAppSettings, type AppSettings } from "../lib/platform";
+import { isTauriRuntime, getOsPlatform, updateAppSettings, type AppSettings } from "../lib/platform";
 import { WindowControls } from "./WindowControls";
 import { AppContextMenu } from "./AppContextMenu";
 import { MobilePin } from "./MobilePin";
@@ -38,6 +38,7 @@ interface AppShellProps {
 
 export function AppShell({ children, settings, totalMs, onSettingsChange }: AppShellProps) {
   const role = calculateRoleProgress(Math.floor(totalMs / 60_000));
+  const os = getOsPlatform();
 
   const togglePet = async () => {
     const enabled = !settings.petEnabled;
@@ -71,9 +72,9 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
   };
 
   return (
-    <div className="app-shell" onMouseDown={startWindowDrag}>
+    <div className="app-shell" data-os={os} onMouseDown={startWindowDrag}>
       <aside className="sidebar">
-        <WindowControls />
+        {os !== "windows" && <WindowControls />}
         <div className="brand-mark" aria-label="BeeTodo" data-tauri-drag-region>
           <img src="/brand/bee-logo.png" alt="" data-tauri-drag-region />
           <strong data-tauri-drag-region>
@@ -148,6 +149,8 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
       </aside>
 
       <main className="main-content">{children}</main>
+
+      {os === "windows" && <WindowControls />}
 
       <div className="mobile-settings">
         <ThemeSettings onSettingsChange={onSettingsChange} />

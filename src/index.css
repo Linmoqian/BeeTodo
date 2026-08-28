@@ -251,6 +251,40 @@ a:focus-visible {
   background: #28c840;
 }
 
+.window-controls.is-windows {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 60;
+  gap: 2px;
+  min-height: 0;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.window-controls.is-windows .window-control {
+  width: 40px;
+  height: 24px;
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+}
+
+.window-controls.is-windows .window-control:hover {
+  filter: none;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: var(--foreground);
+}
+
+.window-controls.is-windows .window-close:hover {
+  background: #e81123;
+  color: #fff;
+}
+
 .brand-mark {
   display: flex;
   align-items: center;
@@ -2604,6 +2638,7 @@ html.pin-control-view #root {
 }
 
 .desktop-main .app-shell {
+  position: relative;
   height: 100%;
   min-height: 0;
   overflow: hidden;

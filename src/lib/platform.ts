@@ -28,6 +28,16 @@ export function isTauriRuntime(): boolean {
   return "__TAURI_INTERNALS__" in window;
 }
 
+export type OsPlatform = "windows" | "macos" | "linux" | "unknown";
+
+export function getOsPlatform(): OsPlatform {
+  const userAgent = navigator.userAgent.toLowerCase();
+  if (userAgent.includes("win")) return "windows";
+  if (userAgent.includes("mac")) return "macos";
+  if (userAgent.includes("linux")) return "linux";
+  return "unknown";
+}
+
 function readJson<T>(key: string, fallback: T): T {
   try {
     const value = localStorage.getItem(key);
