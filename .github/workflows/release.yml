@@ -37,12 +37,15 @@ jobs:
         if: matrix.target != ''
         run: rustup target add ${{ matrix.target }}
 
+      - name: install pnpm
+        uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       - uses: tauri-apps/tauri-action@v0
         env:
