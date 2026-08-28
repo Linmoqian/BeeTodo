@@ -253,25 +253,26 @@ a:focus-visible {
 
 .window-controls.is-windows {
   position: absolute;
-  top: 14px;
-  right: 16px;
+  top: 8px;
+  right: 10px;
   z-index: 60;
-  gap: 2px;
+  gap: 0;
   min-height: 0;
   margin: 0;
-  padding: 3px;
-  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--background) 82%, transparent);
-  backdrop-filter: blur(18px) saturate(150%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  pointer-events: none;
 }
 
 .window-controls.is-windows .window-control {
+  pointer-events: auto;
   width: 40px;
   height: 24px;
   border-radius: 7px;
   background: transparent;
-  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+  color: color-mix(in srgb, var(--foreground) 42%, transparent);
 }
 
 .window-controls.is-windows .window-control:hover {
