@@ -3072,14 +3072,6 @@ html.web-widget-preview #root {
 }
 
 /* Today dashboard */
-.sidebar {
-  color: #f7f3e9;
-  border-right-color: rgb(255 255 255 / 8%);
-  background: radial-gradient(circle at 22% 92%, rgb(255 199 48 / 8%), transparent 30%),
-    linear-gradient(165deg, #1c1c1a, #111210 72%);
-  box-shadow: 10px 0 36px rgb(20 21 17 / 12%);
-}
-
 .brand-mark > img {
   width: 39px;
   height: 39px;
@@ -3088,21 +3080,12 @@ html.web-widget-preview #root {
 }
 
 .brand-mark strong {
-  color: #fff;
+  color: var(--foreground);
   font-size: 19px;
 }
 
 .brand-mark strong span {
-  color: #ffd247;
-}
-
-.sidebar nav a {
-  color: rgb(255 255 255 / 62%);
-}
-
-.sidebar nav a:hover {
-  color: #fff;
-  background: rgb(255 255 255 / 8%);
+  color: var(--accent);
 }
 
 .sidebar nav a.is-active,
@@ -3114,18 +3097,12 @@ html.web-widget-preview #root {
     inset 0 1px rgb(255 255 255 / 65%);
 }
 
-.sidebar-footer {
-  display: block;
-  padding: 14px 0 0;
-  border-top-color: rgb(255 255 255 / 9%);
-}
-
 .character-card {
-  border: 1px solid rgb(255 255 255 / 10%);
+  border: 1px solid var(--border);
   border-radius: 17px;
   padding: 12px;
-  background: linear-gradient(145deg, rgb(255 255 255 / 7%), rgb(255 255 255 / 2%));
-  box-shadow: 0 14px 28px rgb(0 0 0 / 22%);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .character-card header {
@@ -3139,7 +3116,7 @@ html.web-widget-preview #root {
   width: 45px;
   height: 45px;
   object-fit: contain;
-  filter: drop-shadow(0 6px 8px rgb(0 0 0 / 28%));
+  filter: drop-shadow(0 6px 8px rgb(0 0 0 / 12%));
 }
 
 .character-card header > div {
@@ -3151,7 +3128,7 @@ html.web-widget-preview #root {
 
 .character-card header strong {
   overflow: hidden;
-  color: #fff;
+  color: var(--foreground);
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3161,13 +3138,13 @@ html.web-widget-preview #root {
   display: flex;
   align-items: center;
   gap: 3px;
-  color: rgb(255 255 255 / 64%);
+  color: var(--muted-foreground);
   font-size: 9px;
   white-space: nowrap;
 }
 
 .character-card header span svg {
-  color: #ff766f;
+  color: var(--danger);
 }
 
 .character-progress {
@@ -3175,7 +3152,7 @@ html.web-widget-preview #root {
   overflow: hidden;
   margin: 12px 0 6px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 13%);
+  background: var(--surface-muted);
 }
 
 .character-progress > span {
@@ -3190,12 +3167,12 @@ html.web-widget-preview #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: rgb(255 255 255 / 76%);
+  color: var(--muted-foreground);
   font-size: 9px;
 }
 
 .character-level strong {
-  color: #fff;
+  color: var(--foreground);
   font-size: 10px;
 }
 
@@ -3204,7 +3181,7 @@ html.web-widget-preview #root {
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   margin-top: 11px;
-  border-top: 1px solid rgb(255 255 255 / 8%);
+  border-top: 1px solid var(--border);
   padding-top: 9px;
 }
 
@@ -3215,14 +3192,14 @@ html.web-widget-preview #root {
   height: 30px;
   place-items: center;
   border-radius: 9px;
-  color: rgb(255 255 255 / 68%);
-  background: rgb(255 255 255 / 4%);
+  color: var(--muted-foreground);
+  background: var(--surface-muted);
 }
 
 .character-actions > button:hover,
 .character-actions > .icon-button:hover {
-  color: #ffd85d;
-  background: rgb(255 255 255 / 9%);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .main-content:has(.today-dashboard-page) {
