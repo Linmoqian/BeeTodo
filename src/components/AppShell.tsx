@@ -71,6 +71,16 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
       });
   };
 
+  const startEdgeDrag = (event: MouseEvent<HTMLDivElement>) => {
+    if (!isTauriRuntime() || event.button !== 0) return;
+    event.preventDefault();
+    void getCurrentWindow()
+      .startDragging()
+      .catch((error) => {
+        console.error("Failed to start window dragging", error);
+      });
+  };
+
   return (
     <div className="app-shell" data-os={os} onMouseDown={startWindowDrag}>
       <aside className="sidebar">
@@ -172,6 +182,11 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
         ))}
       </nav>
       <AppContextMenu />
+
+      <div className="window-edge-drag window-edge-top" onMouseDown={startEdgeDrag} />
+      <div className="window-edge-drag window-edge-bottom" onMouseDown={startEdgeDrag} />
+      <div className="window-edge-drag window-edge-left" onMouseDown={startEdgeDrag} />
+      <div className="window-edge-drag window-edge-right" onMouseDown={startEdgeDrag} />
     </div>
   );
 }

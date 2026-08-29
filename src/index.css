@@ -286,6 +286,40 @@ a:focus-visible {
   color: #fff;
 }
 
+.window-edge-drag {
+  position: absolute;
+  z-index: 40;
+  cursor: move;
+}
+
+.window-edge-top {
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 6px;
+}
+
+.window-edge-bottom {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 6px;
+}
+
+.window-edge-left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+}
+
+.window-edge-right {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 6px;
+}
+
 .brand-mark {
   display: flex;
   align-items: center;
