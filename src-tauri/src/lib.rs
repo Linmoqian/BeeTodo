@@ -344,7 +344,7 @@ fn toggle_todo(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
 }
 
 #[tauri::command]
-fn start_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
+fn start_timer(app: AppHandle, state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     let now = now_ms();
     let TodoStore {
@@ -355,11 +355,17 @@ fn start_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
     switch_timer(todos, focus_sessions, &id, now);
 
     persist_store(&state.store_path, &store)?;
-    Ok(store.todos.clone())
+    let todos = store.todos.clone();
+    drop(store);
+    // Notify every webview only after the authoritative timer state is saved.
+    if let Err(error) = app.emit("todo-data-changed", ()) {
+        eprintln!("通知计时状态变更失败：{error}");
+    }
+    Ok(todos)
 }
 
 #[tauri::command]
-fn pause_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
+fn pause_timer(app: AppHandle, state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, String> {
     let mut store = state.store.lock().map_err(|err| err.to_string())?;
     let now = now_ms();
     if let Some(index) = store.todos.iter().position(|todo| todo.id == id) {
@@ -368,7 +374,13 @@ fn pause_timer(state: State<'_, AppState>, id: String) -> Result<Vec<Todo>, Stri
         store.todos.insert(index, todo);
     }
     persist_store(&state.store_path, &store)?;
-    Ok(store.todos.clone())
+    let todos = store.todos.clone();
+    drop(store);
+    // Notify every webview only after the authoritative timer state is saved.
+    if let Err(error) = app.emit("todo-data-changed", ()) {
+        eprintln!("通知计时状态变更失败：{error}");
+    }
+    Ok(todos)
 }
 
 #[tauri::command]
