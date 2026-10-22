@@ -1,9 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { FocusSession, StoredTodo, StudyNote } from "../types";
+import type { FocusSession, StoredTodo } from "../types";
+
+export { readLocalNotes } from "./notesStore";
 
 const TODO_STORAGE_KEY = "beetodo-todos";
 const SETTINGS_STORAGE_KEY = "beetodo-settings";
-const NOTES_STORAGE_KEY = "beetodo-study-notes";
 const FOCUS_SESSIONS_STORAGE_KEY = "beetodo-focus-sessions";
 
 export interface AppSettings {
@@ -94,15 +95,6 @@ export function settleLocalFocusSessions(
     if (!exists) sessions.push(addition);
   });
   return writeLocalFocusSessions(sessions);
-}
-
-export function readLocalNotes(): StudyNote[] {
-  return readJson<StudyNote[]>(NOTES_STORAGE_KEY, []);
-}
-
-export function writeLocalNotes(notes: StudyNote[]): StudyNote[] {
-  localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
-  return notes;
 }
 
 export async function getRuntimeTodos(): Promise<StoredTodo[]> {
