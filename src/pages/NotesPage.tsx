@@ -191,6 +191,11 @@ export function NotesPage() {
               )}
               <footer className="note-status">
                 自动保存 · {selectedNote.content.replace(/\s/g, "").length} 字
+                {mode === "edit" && (
+                  <span className="note-format-hint">
+                    使用半角符号：# 标题（# 后加空格） · **粗体** · *斜体* · ~~删除线~~；点击“预览”查看效果。
+                  </span>
+                )}
               </footer>
             </>
           ) : (

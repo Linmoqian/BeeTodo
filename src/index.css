@@ -2141,16 +2141,74 @@ body:has(.notes-page) {
   font-family: "SF Mono", ui-monospace, monospace;
 }
 
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3 {
+.markdown-body :is(h1, h2, h3, h4, h5, h6) {
   margin: 1.3em 0 0.55em;
+  color: var(--foreground);
+  font-weight: 700;
+  line-height: 1.35;
   letter-spacing: -0.025em;
 }
 
-.markdown-body h1:first-child,
-.markdown-body h2:first-child {
+.markdown-body h1 {
+  font-size: 2em;
+}
+.markdown-body h2 {
+  font-size: 1.6em;
+}
+.markdown-body h3 {
+  font-size: 1.3em;
+}
+.markdown-body h4 {
+  font-size: 1.1em;
+}
+.markdown-body h5 {
+  font-size: 1em;
+}
+.markdown-body h6 {
+  font-size: 0.9em;
+}
+
+.markdown-body :is(h1, h2, h3, h4, h5, h6):first-child {
   margin-top: 0;
+}
+
+.markdown-body strong {
+  font-weight: 700;
+}
+.markdown-body em {
+  font-style: italic;
+  /* CJK fallback fonts often lack italic faces; override the global synthesis ban. */
+  font-synthesis: style;
+}
+.markdown-body del {
+  text-decoration: line-through;
+}
+
+.markdown-body :is(ul, ol) {
+  margin: 0.8em 0;
+  padding-left: 1.7em;
+}
+
+.markdown-body ul {
+  list-style-type: disc;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+}
+.markdown-body ul ul {
+  list-style-type: circle;
+}
+.markdown-body ul ul ul {
+  list-style-type: square;
+}
+.markdown-body :is(ul, ol) :is(ul, ol) {
+  margin: 0.3em 0;
+}
+.markdown-body .contains-task-list {
+  list-style-type: none;
+}
+.markdown-body .task-list-item input {
+  margin-right: 0.45em;
 }
 
 .markdown-body p,
@@ -2194,6 +2252,14 @@ body:has(.notes-page) {
   border-bottom: 1px solid var(--border);
   padding: 8px;
   text-align: left;
+}
+
+.note-format-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+  line-height: 1.6;
 }
 
 .note-status {
