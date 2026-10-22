@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { readLocalNotes, writeLocalNotes } from "../lib/platform";
+import {
+  createLocalNote,
+  LEGACY_NOTES_KEY,
+  NOTE_STORAGE_PREFIX,
+  NOTES_CHANGED_EVENT,
+  readLocalNotes,
+  removeLocalNote,
+  updateLocalNote,
+} from "../lib/notesStore";
 import type { StudyNote } from "../types";
 
 const EMPTY_NOTE_CONTENT = "# 新的学习笔记\n\n从一个概念、一段摘录或一道问题开始。";
@@ -21,10 +29,16 @@ export function useNotes() {
 
   useEffect(() => {
     const syncFromStorage = (event: StorageEvent) => {
-      if (event.key === null || event.key === "beetodo-study-notes") {
+      if (
+        event.key === null ||
+        event.key === LEGACY_NOTES_KEY ||
+        event.key.startsWith(NOTE_STORAGE_PREFIX)
+      ) {
         setNotes(readLocalNotes());
       }
     };
+    const syncLocal = () => setNotes(readLocalNotes());
+    window.addEventListener(NOTES_CHANGED_EVENT, syncLocal);
     const syncTimer = window.setInterval(() => {
       const storedNotes = readLocalNotes();
       setNotes((current) =>
@@ -33,6 +47,7 @@ export function useNotes() {
     }, 800);
     window.addEventListener("storage", syncFromStorage);
     return () => {
+      window.removeEventListener(NOTES_CHANGED_EVENT, syncLocal);
       window.clearInterval(syncTimer);
       window.removeEventListener("storage", syncFromStorage);
     };
@@ -40,22 +55,19 @@ export function useNotes() {
 
   const addNote = useCallback(() => {
     const note = createNoteDraft();
-    setNotes((current) => writeLocalNotes([note, ...current]));
+    setNotes(createLocalNote(note));
     return note.id;
   }, []);
 
-  const updateNote = useCallback((id: string, patch: Partial<Pick<StudyNote, "title" | "content" | "category">>) => {
-    setNotes((current) =>
-      writeLocalNotes(
-        current.map((note) =>
-          note.id === id ? { ...note, ...patch, updatedAt: Date.now() } : note,
-        ),
-      ),
-    );
-  }, []);
+  const updateNote = useCallback(
+    (id: string, patch: Partial<Pick<StudyNote, "title" | "content" | "category">>) => {
+      setNotes(updateLocalNote(id, patch));
+    },
+    [],
+  );
 
   const removeNote = useCallback((id: string) => {
-    setNotes((current) => writeLocalNotes(current.filter((note) => note.id !== id)));
+    setNotes(removeLocalNote(id));
   }, []);
 
   const importNote = useCallback((title: string, content: string) => {
@@ -68,7 +80,7 @@ export function useNotes() {
       createdAt: now,
       updatedAt: now,
     };
-    setNotes((current) => writeLocalNotes([note, ...current]));
+    setNotes(createLocalNote(note));
     return note.id;
   }, []);
 
