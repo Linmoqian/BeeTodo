@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   getRuntimeFocusSessions,
   isTauriRuntime,
@@ -29,13 +31,67 @@ export function useTodos() {
   }, []);
 
   useEffect(() => {
-    if (!isTauriRuntime()) return;
-    void Promise.all([invoke<StoredTodo[]>("list_todos"), getRuntimeFocusSessions()])
-      .then(([nextTodos, nextFocusSessions]) => {
-        setTodos(nextTodos);
-        setFocusSessions(nextFocusSessions);
-      })
-      .catch((error) => console.error("Failed to load todo data", error));
+    if (!isTauriRuntime()) return undefined;
+    let disposed = false;
+    let refreshing = false;
+    let refreshAgain = false;
+    const subscriptions: (() => void)[] = [];
+
+    const refresh = async (): Promise<void> => {
+      if (disposed) return;
+      if (refreshing) {
+        refreshAgain = true;
+        return;
+      }
+      refreshing = true;
+      refreshAgain = false;
+      try {
+        const [nextTodos, nextFocusSessions] = await Promise.all([
+          invoke<StoredTodo[]>("list_todos"),
+          getRuntimeFocusSessions(),
+        ]);
+        // A timer changed during this read. Fetch again rather than applying
+        // an outdated running timer or mixing it with newly settled history.
+        if (!disposed && !refreshAgain) {
+          setTodos(nextTodos);
+          setFocusSessions(nextFocusSessions);
+          setNow(Date.now());
+        }
+      } catch (error) {
+        console.error("Failed to load todo data", error);
+      } finally {
+        refreshing = false;
+        if (!disposed && refreshAgain) void refresh();
+      }
+    };
+
+    const register = (subscription: Promise<() => void>) => {
+      void subscription
+        .then((unlisten) => {
+          if (disposed) unlisten();
+          else subscriptions.push(unlisten);
+        })
+        .catch((error) => console.error("Failed to subscribe to timer updates", error));
+    };
+    register(
+      listen("todo-data-changed", () => {
+        void refresh();
+      }).then((unlisten) => {
+        // Cover changes between the initial read and listener registration.
+        void refresh();
+        return unlisten;
+      }),
+    );
+    register(
+      getCurrentWindow().onFocusChanged(({ payload }) => {
+        if (payload) void refresh();
+      }),
+    );
+    void refresh();
+    return () => {
+      disposed = true;
+      subscriptions.forEach((unlisten) => unlisten());
+    };
   }, []);
 
   useEffect(() => {
