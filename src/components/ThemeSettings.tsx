@@ -20,17 +20,18 @@ import {
   updateAppSettings,
   type AppSettings,
 } from "../lib/platform";
-import { closePetWindow, openPetWindow } from "../lib/petWindow";
 import { openFocusWindow } from "../lib/focusWindow";
 import { openQuickNoteWindow } from "../lib/noteWindows";
 import { UpdateSettings } from "./UpdateSettings";
 
 interface ThemeSettingsProps {
+  petEnabled?: boolean;
   onOpacityChange?: (value: number) => void;
   onSettingsChange?: (settings: AppSettings) => void;
 }
 
 export function ThemeSettings({
+  petEnabled: petEnabledOverride,
   onOpacityChange,
   onSettingsChange,
 }: ThemeSettingsProps) {
@@ -39,6 +40,7 @@ export function ThemeSettings({
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [shortcutError, setShortcutError] = useState("");
   const [recordingShortcut, setRecordingShortcut] = useState(false);
+  const petEnabled = petEnabledOverride ?? settings.petEnabled;
 
   useEffect(() => {
     void getAppSettings().then((nextSettings) => {
@@ -59,9 +61,8 @@ export function ThemeSettings({
   };
 
   const togglePet = async () => {
-    const enabled = !settings.petEnabled;
+    const enabled = !petEnabled;
     await save("set_pet_enabled", { enabled }, { petEnabled: enabled });
-    await (enabled ? openPetWindow() : closePetWindow());
   };
 
   const saveShortcut = async (shortcut: string) => {
@@ -214,7 +215,7 @@ export function ThemeSettings({
                     </button>
                     <button className="switch-row" onClick={() => void togglePet()}>
                       <span>蜜蜂桌宠</span>
-                      <span className={`switch ${settings.petEnabled ? "is-on" : ""}`} />
+                      <span className={`switch ${petEnabled ? "is-on" : ""}`} />
                     </button>
                   </div>
                 )}

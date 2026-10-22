@@ -1,9 +1,6 @@
 import { LogicalPosition } from "@tauri-apps/api/dpi";
 import { primaryMonitor } from "@tauri-apps/api/window";
-import {
-  getAllWebviewWindows,
-  WebviewWindow,
-} from "@tauri-apps/api/webviewWindow";
+import { getAllWebviewWindows, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { isTauriRuntime } from "./platform";
 
 const PET_WINDOW_LABEL = "pet";
@@ -60,13 +57,30 @@ export async function openPetWindow() {
     focus: false,
   });
 
-  petWindow.once("tauri://created", () => {
-    void positionPetWindow(petWindow).catch(() => petWindow.center());
-  });
-
-  petWindow.once("tauri://error", (event) => {
-    console.error("Failed to create pet window", event.payload);
-  });
+  let settled = false;
+  const subscriptions: (() => void)[] = [];
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const register = (subscription: Promise<() => void>) => {
+        void subscription
+          .then((unlisten) => {
+            if (settled) unlisten();
+            else subscriptions.push(unlisten);
+          })
+          .catch(reject);
+      };
+      register(petWindow.once("tauri://created", () => resolve()));
+      register(
+        petWindow.once("tauri://error", (event) => {
+          reject(new Error(`Failed to create pet window: ${String(event.payload)}`));
+        }),
+      );
+    });
+  } finally {
+    settled = true;
+    subscriptions.forEach((unlisten) => unlisten());
+  }
+  await positionPetWindow(petWindow).catch(() => petWindow.center());
 }
 
 export async function closePetWindow() {

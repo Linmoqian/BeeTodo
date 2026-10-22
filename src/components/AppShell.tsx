@@ -17,7 +17,7 @@ import { WindowControls } from "./WindowControls";
 import { AppContextMenu } from "./AppContextMenu";
 import { MobilePin } from "./MobilePin";
 import { openFocusWindow } from "../lib/focusWindow";
-import { closePetWindow, openPetWindow } from "../lib/petWindow";
+import { usePetWindow } from "../hooks/usePetWindow";
 import { emitDebugEvent } from "../lib/debugBus";
 import { calculateRoleProgress } from "../lib/focusStats";
 
@@ -37,6 +37,7 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, settings, totalMs, onSettingsChange }: AppShellProps) {
+  usePetWindow(settings.petEnabled);
   const role = calculateRoleProgress(Math.floor(totalMs / 60_000));
   const os = getOsPlatform();
 
@@ -47,7 +48,6 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
       { enabled },
       { petEnabled: enabled },
     );
-    await (enabled ? openPetWindow() : closePetWindow());
     onSettingsChange(nextSettings);
     emitDebugEvent("sidebar", enabled ? "桌宠已开启" : "桌宠已关闭");
   };
@@ -152,7 +152,7 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
               >
                 <Sparkles size={16} />
               </button>
-              <ThemeSettings onSettingsChange={onSettingsChange} />
+              <ThemeSettings petEnabled={settings.petEnabled} onSettingsChange={onSettingsChange} />
             </div>
           </section>
         </div>
@@ -163,7 +163,7 @@ export function AppShell({ children, settings, totalMs, onSettingsChange }: AppS
       {os === "windows" && <WindowControls />}
 
       <div className="mobile-settings">
-        <ThemeSettings onSettingsChange={onSettingsChange} />
+        <ThemeSettings petEnabled={settings.petEnabled} onSettingsChange={onSettingsChange} />
       </div>
 
       <MobilePin />
